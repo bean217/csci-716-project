@@ -1,0 +1,36 @@
+{
+  "name": "csci-716-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "docker:dev": "docker build -f Dockerfile.dev -t raytracing-dev . && docker run -p 5173:5173 -v $(pwd)/src:/app/src -v $(pwd)/index.html:/app/index.html raytracing-dev",
+    "docker:build": "docker build -t raytracing-prod .",
+    "docker:run": "docker run -p 8080:80 raytracing-prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bean217/csci-716-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/bean217/csci-716-project/issues"
+  },
+  "homepage": "https://github.com/bean217/csci-716-project#readme",
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "pixi.js": "^8.14.0",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.1.10"
+  }
+}
