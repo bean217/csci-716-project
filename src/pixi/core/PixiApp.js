@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
-import GeometryRenderer from "../renderers/GeometryRenderer.js";
+import GeometryRenderer from '@/pixi/renderers/GeometryRenderer.js';
+import InteractionManager from '@/pixi/interactions/InteractionManager.js';
 
 export default class PixiApp {
     constructor(container, sceneStore = null) {
@@ -7,6 +8,7 @@ export default class PixiApp {
         this.app = null;
         this.sceneStore = sceneStore;
         this.geometryRenderer = null;
+        this.interactionManager = null;
     }
 
     async init(container) {
@@ -32,11 +34,12 @@ export default class PixiApp {
         // Initialize geometry renderer if store is provided
         if (this.sceneStore) {
             this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
+            this.interactionManager = new InteractionManager(this.app, this.sceneStore);
         }
     }
 
     handleResize() {
-        if (this.container) {
+        if (this.container && this.app) {
             this.app.renderer.resize(
                 this.container.clientWidth,
                 this.container.clientHeight
