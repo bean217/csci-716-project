@@ -3,15 +3,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import PixiApp from '@/pixi/core/PixiApp.js'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useSceneStore } from '@/stores/sceneStore';
+import PixiApp from '@/pixi/core/PixiApp.js';
 
-const canvasContainer = ref(null)
-let pixiApp = null
+const canvasContainer = ref(null);
+const sceneStore = useSceneStore();
+let pixiApp = null;
 
-onMounted(() => {
+onMounted(async () => {
   // Initialize PixiJS application
-  pixiApp = new PixiApp(canvasContainer.value)
+  pixiApp = new PixiApp(canvasContainer.value, sceneStore);
+  await pixiApp.init(canvasContainer.value)
 })
 
 onUnmounted(() => {

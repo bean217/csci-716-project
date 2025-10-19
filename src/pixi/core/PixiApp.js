@@ -1,11 +1,19 @@
 import * as PIXI from 'pixi.js'
+import GeometryRenderer from "../renderers/GeometryRenderer.js";
 
 export default class PixiApp {
-    constructor(container) {
+    constructor(container, sceneStore = null) {
         this.container = container
+        this.app = null;
+        this.sceneStore = sceneStore;
+        this.geometryRenderer = null;
+    }
 
-        // Create PIXI Application
-        this.app = new PIXI.Application({
+    async init(container) {
+        // Create PIXI Application (async in PixiJS 7+)
+        this.app = new PIXI.Application()
+
+        await this.app.init({
             width: container.clientWidth,
             height: container.clientHeight,
             backgroundColor: 0x1a1a1a,
@@ -15,29 +23,16 @@ export default class PixiApp {
         })
 
         // Append canvas to container
-        container.appendChild(this.app.view)
+        container.appendChild(this.app.canvas)
 
         // Handle window resize
         this.handleResize = this.handleResize.bind(this)
         window.addEventListener('resize', this.handleResize)
 
-        // Add a simple text to verify PixiJS is working
-        this.addWelcomeText()
-    }
-
-    addWelcomeText() {
-        const text = new PIXI.Text('PixiJS Canvas Ready', {
-            fontFamily: 'Arial',
-            fontSize: 24,
-            fill: 0xffffff,
-            align: 'center'
-        })
-
-        text.anchor.set(0.5)
-        text.x = this.app.screen.width / 2
-        text.y = this.app.screen.height / 2
-
-        this.app.stage.addChild(text)
+        // Initialize geometry renderer if store is provided
+        if (this.sceneStore) {
+            this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
+        }
     }
 
     handleResize() {
@@ -45,12 +40,19 @@ export default class PixiApp {
             this.app.renderer.resize(
                 this.container.clientWidth,
                 this.container.clientHeight
-            )
+            );
         }
     }
 
     destroy() {
-        window.removeEventListener('resize', this.handleResize)
-        this.app.destroy(true, {children: true, texture: true})
+        window.removeEventListener('resize', this.handleResize);
+
+        if (this.geometryRenderer) {
+            this.geometryRenderer.destroy();
+        }
+
+        if (this.app) {
+            this.app.destroy(true, { children: true, texture: true });
+        }
     }
 }

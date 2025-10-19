@@ -103,6 +103,8 @@ export default class Rectangle extends GeometricObject {
         const halfHeight = this.height / 2;
         const cos = Math.cos(this.rotation);
         const sin = Math.sin(this.rotation);
+        const px = this.position.x;
+        const py = this.position.y;
 
         // Local coordinates (centered at origin)
         const localVertices = [
@@ -114,8 +116,8 @@ export default class Rectangle extends GeometricObject {
 
         // Transform to world coordinates with rotation
         return localVertices.map(v => ({
-            x: this.position + v.x * cos - v.y * sin,
-            y: this.position + v.x * sin + v.y * cos
+            x: px + v.x * cos - v.y * sin,
+            y: py + v.x * sin + v.y * cos
         }));
     }
 

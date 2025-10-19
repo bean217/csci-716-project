@@ -4,7 +4,8 @@
       <CanvasContainer />
       <div id="ui-panel">
         <h2>Ray Tracing Simulator</h2>
-        <p>Canvas is ready!</p>
+        <ToolPalette />
+        <PropertyPanel />
       </div>
     </div>
 
@@ -31,6 +32,8 @@
 
 <script setup>
 import CanvasContainer from './components/canvas/CanvasContainer.vue'
+import ToolPalette from './components/panels/ToolPalette.vue'
+import PropertyPanel from './components/panels/PropertyPanel.vue'
 </script>
 
 <style scoped>
@@ -50,24 +53,22 @@ import CanvasContainer from './components/canvas/CanvasContainer.vue'
 }
 
 #ui-panel {
-  width: 300px;
+  width: 320px;
   background: #2a2a2a;
   color: #ffffff;
   padding: 20px;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 #ui-panel h2 {
-  margin: 0 0 16px 0;
+  margin: 0 0 20px 0;
   font-size: 18px;
   font-weight: 600;
-}
-
-#ui-panel p {
-  margin: 0;
-  font-size: 14px;
-  color: #aaaaaa;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #444;
 }
 
 #project-info {

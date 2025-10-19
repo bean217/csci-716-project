@@ -1,0 +1,147 @@
+<template>
+  <div class="tool-palette">
+    <h3>Add Shape</h3>
+    <select v-model="selectedShape" @change="handleShapeSelection" class="shape-dropdown">
+      <option value="" disabled>Select a shape...</option>
+
+      <optgroup label="Rectangles">
+        <option value="Rectangle">Rectangle</option>
+        <option value="Square">Square</option>
+      </optgroup>
+
+      <optgroup label="Ellipses">
+        <option value="Ellipse">Ellipse</option>
+        <option value="Circle">Circle</option>
+      </optgroup>
+
+      <optgroup label="Triangles">
+        <option value="Triangle">Triangle</option>
+        <option value="EquilateralTriangle">Equilateral Triangle</option>
+      </optgroup>
+    </select>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useSceneStore } from '@/stores/sceneStore'
+import Rectangle from '@/geometry/Rectangle'
+import Square from '@/geometry/Square'
+
+const sceneStore = useSceneStore()
+const selectedShape = ref('')
+
+// Default positions for new shapes (center of a typical canvas)
+const getDefaultPosition = () => ({
+  x: 400,
+  y: 300
+})
+
+const handleShapeSelection = () => {
+  const shapeType = selectedShape.value
+
+  if (!shapeType) return
+
+  const position = getDefaultPosition()
+  let newObject = null
+
+  switch (shapeType) {
+    case 'Rectangle':
+      newObject = new Rectangle({
+        x: position.x,
+        y: position.y,
+        width: 100,
+        height: 60
+      })
+      break
+
+    case 'Square':
+      newObject = new Square({
+        x: position.x,
+        y: position.y,
+        sideLength: 80
+      })
+      break
+
+    case 'Ellipse':
+      // TODO: Implement when Ellipse class is ready
+      console.warn('Ellipse not yet implemented')
+      break
+
+    case 'Circle':
+      // TODO: Implement when Circle class is ready
+      console.warn('Circle not yet implemented')
+      break
+
+    case 'Triangle':
+      // TODO: Implement when Triangle class is ready
+      console.warn('Triangle not yet implemented')
+      break
+
+    case 'EquilateralTriangle':
+      // TODO: Implement when EquilateralTriangle class is ready
+      console.warn('EquilateralTriangle not yet implemented')
+      break
+  }
+
+  if (newObject) {
+    sceneStore.addObject(newObject, true)
+    console.log(`Created ${shapeType}`)
+  }
+
+  // Reset dropdown to placeholder
+  selectedShape.value = ''
+}
+</script>
+
+<style scoped>
+.tool-palette {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #444;
+}
+
+.tool-palette h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.shape-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  background: #333;
+  color: #ffffff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.shape-dropdown:hover {
+  border-color: #4a9eff;
+}
+
+.shape-dropdown:focus {
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.shape-dropdown option {
+  background: #333;
+  color: #ffffff;
+  padding: 8px;
+}
+
+.shape-dropdown optgroup {
+  background: #2a2a2a;
+  color: #aaaaaa;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+</style>

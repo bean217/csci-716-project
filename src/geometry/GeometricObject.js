@@ -22,7 +22,7 @@ export default class GeometricObject {
         fillColor = '#666666',
         material = null
     } = {}) {
-        this.id = id || IdGenerator(type.toLowerCase());
+        this.id = id || IdGenerator.generate(type.toLowerCase());
         this.type = type;
         this.position = { x: x, y: y };
         this.rotation = rotation;   // in radians
@@ -73,12 +73,12 @@ export default class GeometricObject {
 
     // Fill color getter
     getFillColor() {
-        return this.edgeColor;
+        return this.fillColor;
     }
 
     // Fill color setter
     setFillColor(color) {
-        this.edgeColor = color;
+        this.fillColor = color;
     }
 
     // Material getter
