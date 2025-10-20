@@ -85,39 +85,38 @@ export default class RayRenderer {
         this.rayTracer.settings.maxBounces = this.simulationStore.maxBounces;
         this.rayTracer.settings.minIntensity = this.simulationStore.minIntensity;
 
-        // Trace all rays
-        const allPaths = this.rayTracer.traceAll();
+        // Trace all rays (returns segment trees)
+        const allSegments = this.rayTracer.traceAll();
 
         // Render each path
         const color = this.hexToNumber(this.simulationStore.rayColor);
         const alpha = this.simulationStore.rayOpacity;
         const width = this.simulationStore.rayWidth;
 
-        allPaths.forEach(path => {
-            this.drawPath(path, color, alpha, width);
+        allSegments.forEach(segment => {
+            this.drawSegmentTree(segment, color, alpha, width);
         });
     }
 
     /**
-     * Draw a ray path
+     * Draw a ray segment tree recursively
      */
-    drawPath(path, color, alpha, width) {
-        if (path.length < 2) return;
-
-        // Start path
-        this.rayGraphics.moveTo(path[0].x, path[0].y);
-
-        // Draw lines to each point
-        for (let i = 1; i < path.length; i++) {
-            this.rayGraphics.lineTo(path[i].x, path[i].y);
-        }
-
-        // Apply stroke
+    drawSegmentTree(segment, color, alpha, width) {
+        // Draw this segment
+        this.rayGraphics.moveTo(segment.start.x, segment.start.y);
+        this.rayGraphics.lineTo(segment.end.x, segment.end.y);
         this.rayGraphics.stroke({
             width: width,
             color: color,
-            alpha: alpha
+            alphaL: alpha
         });
+
+        // Draw all children
+        if (segment.children && segment.children.length > 0) {
+            segment.children.forEach(child => {
+                this.drawSegmentTree(child, color, alpha, width);
+            });
+        }
     }
 
     /**

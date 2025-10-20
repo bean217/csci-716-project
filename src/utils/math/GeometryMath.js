@@ -167,10 +167,12 @@ export default class GeometryMath {
 
         const sqrtD = Math.sqrt(discriminant);
         let t = (-b - sqrtD) / (2 * a);
+        let useSecondIntersection = false;
 
         // If first intersection is behind ray, try second
         if (t < this.EPSILON) {
             t = (-b + sqrtD) / (2 * a);
+            useSecondIntersection = true;
         }
 
         if (t < this.EPSILON) {
@@ -195,6 +197,13 @@ export default class GeometryMath {
         localNormal.x /= normalLength;
         localNormal.y /= normalLength;
 
+        // If we're using the second intersection (exiting from inside),
+        // flip the normal to point inward
+        if (useSecondIntersection) {
+            localNormal.x = -localNormal.x;
+            localNormal.y = -localNormal.y;
+        }
+
         // Transform hit point back to world space
         const rotCos = Math.cos(rotation);
         const rotSin = Math.sin(rotation);
@@ -218,56 +227,56 @@ export default class GeometryMath {
         return new Intersection(true, distance, worldHit, worldNormal, object);
     }
 
-    /**
-     * Ray-circle intersection (for ellipses with equal radii)
-     * @param {Object} rayOrigin - {x, y}
-     * @param {Object} rayDir - {x, y} normalized
-     * @param {Object} center - Circle center {x, y}
-     * @param {number} radius - Circle radius
-     * @param {Object} object - The geometric object
-     * @returns {Intersection}
-     */
-    static rayCircleIntersection(rayOrigin, rayDir, center, radius, object) {
-        const oc = {
-            x: rayOrigin.x - center.x,
-            y: rayOrigin.y - center.y
-        };
-
-        const a = rayDir.x * rayDir.x + rayDir.y * rayDir.y;
-        const b = 2 * (oc.x * rayDir.x + oc.y * rayDir.y);
-        const c = oc.x * oc.x + oc.y * oc.y - radius * radius;
-
-        const discriminant = b * b - 4 * a * c;
-
-        if (discriminant < 0) {
-            return Intersection.noHit();
-        }
-
-        const sqrtD = Math.sqrt(discriminant);
-        let t = (-b - sqrtD) / (2 * a);
-
-        // If first intersection is behind ray, try second
-        if (t < this.EPSILON) {
-            t = (-b + sqrtD) / (2 * a);
-        }
-
-        if (t < this.EPSILON) {
-            return Intersection.noHit();
-        }
-
-        const point = {
-            x: rayOrigin.x + t * rayDir.x,
-            y: rayOrigin.y + t * rayDir.y
-        };
-
-        // Normal points from center to hit point
-        const normal = {
-            x: (point.x - center.x) / radius,
-            y: (point.y - center.y) / radius
-        };
-
-        return new Intersection(true, t, point, normal, object);
-    }
+    // /**
+    //  * Ray-circle intersection (for ellipses with equal radii)
+    //  * @param {Object} rayOrigin - {x, y}
+    //  * @param {Object} rayDir - {x, y} normalized
+    //  * @param {Object} center - Circle center {x, y}
+    //  * @param {number} radius - Circle radius
+    //  * @param {Object} object - The geometric object
+    //  * @returns {Intersection}
+    //  */
+    // static rayCircleIntersection(rayOrigin, rayDir, center, radius, object) {
+    //     const oc = {
+    //         x: rayOrigin.x - center.x,
+    //         y: rayOrigin.y - center.y
+    //     };
+    //
+    //     const a = rayDir.x * rayDir.x + rayDir.y * rayDir.y;
+    //     const b = 2 * (oc.x * rayDir.x + oc.y * rayDir.y);
+    //     const c = oc.x * oc.x + oc.y * oc.y - radius * radius;
+    //
+    //     const discriminant = b * b - 4 * a * c;
+    //
+    //     if (discriminant < 0) {
+    //         return Intersection.noHit();
+    //     }
+    //
+    //     const sqrtD = Math.sqrt(discriminant);
+    //     let t = (-b - sqrtD) / (2 * a);
+    //
+    //     // If first intersection is behind ray, try second
+    //     if (t < this.EPSILON) {
+    //         t = (-b + sqrtD) / (2 * a);
+    //     }
+    //
+    //     if (t < this.EPSILON) {
+    //         return Intersection.noHit();
+    //     }
+    //
+    //     const point = {
+    //         x: rayOrigin.x + t * rayDir.x,
+    //         y: rayOrigin.y + t * rayDir.y
+    //     };
+    //
+    //     // Normal points from center to hit point
+    //     const normal = {
+    //         x: (point.x - center.x) / radius,
+    //         y: (point.y - center.y) / radius
+    //     };
+    //
+    //     return new Intersection(true, t, point, normal, object);
+    // }
 
     /**
      * Ray-object intersection (dispatcher)

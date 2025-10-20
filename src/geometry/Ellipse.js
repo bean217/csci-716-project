@@ -147,9 +147,10 @@ export default class Ellipse extends GeometricObject {
 
         // Check ellipse equation
         const normalized =
-            (localX * localY) / (this.rx * this.rx) +
+            (localX * localX) / (this.rx * this.rx) +
             (localY * localY) / (this.ry * this.ry);
 
+        console.log("ContainsPoint:", normalized <= 1);
         return normalized <= 1;
     }
 

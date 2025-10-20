@@ -29,15 +29,17 @@ export default class RayTracer {
      * @returns {Array} Array of ray paths for rendering
      */
     traceAll() {
-        const allPaths = []
+        const allSegments = []
 
         // Trace rays from each focal point
         this.sceneStore.focalPoints.forEach(focalPoint => {
-            const paths = this.traceFocalPoint(focalPoint);
-            allPaths.push(...paths);
+            const segments = this.traceFocalPoint(focalPoint);
+            allSegments.push(...segments);
         });
 
-        return allPaths;
+        console.log(`Traced ${allSegments.length} primary ray segments`);
+
+        return allSegments;
     }
 
     /**
@@ -46,7 +48,7 @@ export default class RayTracer {
      * @returns {Array} Array of ray paths
      */
     traceFocalPoint(focalPoint) {
-        const paths = [];
+        const allSegments = [];
         const directions = focalPoint.getRayDirections();
 
         // Determine if focal point is inside any object
@@ -54,14 +56,13 @@ export default class RayTracer {
 
         directions.forEach(direction => {
             const ray = new Ray(focalPoint.position, direction, 1.0, 0);
-            const path = this.traceRay(ray, focalPoint.rayLength, startingMedium);
+            const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
 
-            if (path.length > 0) {
-                paths.push(path);
-            }
+            // Add all segments from this ray
+            allSegments.push(...segments);
         });
 
-        return paths;
+        return allSegments;
     }
 
     /**
@@ -72,15 +73,41 @@ export default class RayTracer {
      * @returns {Array} Array of points representing the ray path
      */
     traceRay(ray, maxDistance, currentMedium = null) {
-        const path = [{ ...ray.origin }];
-        let currentRay = ray;
-        let remainingDistance = maxDistance;
-        let insideObject = currentMedium;
+        const segments = [];
 
-        for (let bounce = 0; bounce < this.settings.maxBounces; bounce++) {
+        // Queue of rays to process: {ray, medium, distance, startPoint, segments}
+        const rayQueue = [{
+            ray: ray,
+            medium: currentMedium,
+            distance: maxDistance,
+            startPoint: { ...ray.origin },
+            segments: segments  // Reference to where we should add child segments
+        }];
+
+        while (rayQueue.length > 0) {
+            const {
+                ray: currentRay,
+                medium: insideObject,
+                distance: remainingDistance,
+                startPoint,
+                segments: parentSegments
+            } = rayQueue.shift();
+
             // Stop if intensity too low
             if (currentRay.intensity < this.settings.minIntensity) {
-                break;
+                continue;
+            }
+
+            // Stop if too many bounces
+            if (currentRay.generation >= this.settings.maxBounces) {
+                // Add final segment to max distance
+                const endPoint = currentRay.pointAt(remainingDistance);
+                parentSegments.push({
+                    start: startPoint,
+                    end: endPoint,
+                    children: []
+                });
+                continue;
             }
 
             // Find the closest intersection
@@ -89,38 +116,128 @@ export default class RayTracer {
             if (!intersection.hit) {
                 // No hit - ray continues to max distance
                 const endPoint = currentRay.pointAt(remainingDistance);
-                path.push(endPoint);
-                break;
+                parentSegments.push({
+                    start: startPoint,
+                    end: endPoint,
+                    children: []
+                });
+                continue;
             }
 
             // Check if intersection is within remaining distance
             if (intersection.distance > remainingDistance) {
                 const endPoint = currentRay.pointAt(remainingDistance);
-                path.push(endPoint);
-                break;
+                parentSegments.push({
+                    start: startPoint,
+                    end: endPoint,
+                    children: []
+                });
+                continue;
             }
 
-            // Add intersection point to path
-            path.push({ ...intersection.point });
-            remainingDistance -= intersection.distance;
+            // Create segment to intersection point
+            const segment = {
+                start: startPoint,
+                end: { ...intersection.point },
+                children: []
+            };
+            parentSegments.push(segment);
 
-            // Calculate next ray based on material properties and medium transition
-            const result = this.calculateNextRay(
+            const newRemainingDistance = remainingDistance - intersection.distance;
+
+            // Calculate next rays (both reflection and refraction)
+            const nextRays = this.calculateNextRays(
                 currentRay,
                 intersection,
                 insideObject
             );
 
-            if (!result) {
-                // Ray absorbed
-                break;
-            }
-
-            currentRay = result.ray;
-            insideObject = result.medium;
+            // Add all resulting rays to the queue as children of this segment
+            nextRays.forEach(result => {
+                rayQueue.push({
+                    ray: result.ray,
+                    medium: result.medium,
+                    distance: newRemainingDistance,
+                    startPoint: { ...intersection.point },
+                    segments: segment.children  // Children are added to this segment
+                });
+            });
         }
 
-        return path;
+        return segments;
+
+        // const paths = [];
+        //
+        // // Queue of rays to process: {ray, medium, distance, path}
+        // const rayQueue = [{
+        //     ray: ray,
+        //     medium: currentMedium,
+        //     distance: maxDistance,
+        //     path: [{ ...ray.origin }]
+        // }];
+        //
+        // while (rayQueue.length > 0) {
+        //     const { ray: currentRay, medium: insideObject, distance: remainingDistance, path } = rayQueue.shift();
+        //
+        //     // Stop if intensity too low
+        //     if (currentRay.intensity < this.settings.minIntensity) {
+        //         if (path.length > 1) {
+        //             paths.push(path);
+        //         }
+        //         continue;
+        //     }
+        //
+        //     // Stop if too many bounces
+        //     if (currentRay.generation >= this.settings.maxBounces) {
+        //         // Add endpoint
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         path.push(endPoint);
+        //         paths.push(path);
+        //         continue;
+        //     }
+        //
+        //     // Find the closest intersection
+        //     const intersection = this.findClosestIntersection(currentRay, insideObject);
+        //
+        //     if (!intersection.hit) {
+        //         // No hit - ray continues to max distance
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         path.push(endPoint);
+        //         paths.push(path);
+        //         continue;
+        //     }
+        //
+        //     // Check if intersection is within remaining distance
+        //     if (intersection.distance > remainingDistance) {
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         path.push(endPoint);
+        //         paths.push(path);
+        //         continue;
+        //     }
+        //
+        //     // Add intersection point path
+        //     const newPath = [...path, { ...intersection.point }];
+        //     const newRemainingDistance = remainingDistance - intersection.distance;
+        //
+        //     // Calculate next rays (both reflection and refraction)
+        //     const nextRays = this.calculateNextRays(
+        //         currentRay,
+        //         intersection,
+        //         insideObject
+        //     );
+        //
+        //     // Add all resulting rays to the queue
+        //     nextRays.forEach(result => {
+        //         rayQueue.push({
+        //             ray: result.ray,
+        //             medium: result.medium,
+        //             distance: newRemainingDistance,
+        //             path: [...newPath]
+        //         });
+        //     });
+        // }
+        //
+        // return paths;
     }
 
     /**
@@ -174,15 +291,16 @@ export default class RayTracer {
     }
 
     /**
-     * Calculate the next ray after hitting a surface
+     * Calculate the next rays after hitting a surface (both reflection and refraction)
      * @param {Ray} ray - Current ray
      * @param {Intersection} intersection - Intersection info
-     * @param {Object|null} currentMedium - surface material
-     * @returns {Object|null} {ray: Ray, medium: Object|null} or null if absorbed
+     * @param {Object|null} currentMedium - The object the ray is currently inside (null = air)
+     * @returns {Array} Array of {ray: Ray, medium: Object|null}
      */
-    calculateNextRay(ray, intersection, currentMedium) {
+    calculateNextRays(ray, intersection, currentMedium) {
         const material = intersection.object.material;
         const reflectivity = material.reflectivity;
+        const results = [];
 
         // Determine if we're entering or exiting the object
         const entering = currentMedium === null || currentMedium.id !== intersection.object.id;
@@ -199,20 +317,17 @@ export default class RayTracer {
             n2 = this.settings.airRefractiveIndex;
         }
 
-        // Calculate angle of incidence
-        const cosTheta = -LightCalculator.dot(ray.direction, intersection.normal);
-
-        // Pure reflection (mirror)
-        if (reflectivity >= 0.99) {
+        // Calculate reflected ray
+        if (reflectivity > 0.001) {
             const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-            return {
+            results.push({
                 ray: ray.spawn(intersection.point, reflectedDir, reflectivity),
-                medium: currentMedium   // stay in the same medium
-            };
+                medium: currentMedium   // Reflection stays in the same medium
+            });
         }
 
-        // Pure refraction (glass with minimal reflection
-        if (reflectivity <= 0.01) {
+        // Calculate refracted ray
+        if (reflectivity < 0.999) {
             const refractedDir = LightCalculator.refract(
                 ray.direction,
                 intersection.normal,
@@ -221,58 +336,22 @@ export default class RayTracer {
             );
 
             if (refractedDir) {
-                // Successful refraction - change medium
+                // Successful refraction
                 const newMedium = entering ? intersection.object : null;
-                return {
+                results.push({
                     ray: ray.spawn(intersection.point, refractedDir, 1 - reflectivity),
                     medium: newMedium
-                };
+                });
             } else {
-                // Total internal reflection
+                // Total internal reflection -- all remaining energy reflects
                 const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-                return {
-                    ray: ray.spawn(intersection.point, reflectedDir, 1.0),
-                    medium: currentMedium   // stay in the same medium
-                };
-            }
-        }
-
-        // Mixed reflection/refraction (use Fresnel)
-        const fresnelReflectance = LightCalculator.fresnelReflectance(cosTheta, n1, n2);
-
-        // Decide: reflection or refraction
-        // For visualization, we'll deterministically choose based on Fresnel
-        // TODO: Update the following to render rays but modify their intensity
-        if (Math.random() < fresnelReflectance || Math.random() < reflectivity) {
-            // Reflection
-            const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-            return {
-                ray: ray.spawn(intersection.point, reflectedDir, reflectivity),
-                medium: currentMedium   // stay in the same medium
-            };
-        } else {
-            // Refraction
-            const refractedDir = LightCalculator.refract(
-                ray.direction,
-                intersection.normal,
-                n1,
-                n2
-            );
-
-            if (refractedDir) {
-                const newMedium = entering ? intersection.object : null;
-                return {
-                    ray: ray.spawn(intersection.point, refractedDir, 1 - reflectivity),
-                    medium: newMedium
-                };
-            } else {
-                // Total internal reflection
-                const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-                return {
-                    ray: ray.spawn(intersection.point, reflectedDir, 1.0),
+                results.push({
+                    ray: ray.spawn(intersection.point, reflectedDir, 1 - reflectivity),
                     medium: currentMedium
-                };
+                });
             }
         }
+
+        return results;
     }
 }
