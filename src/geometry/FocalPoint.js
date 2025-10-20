@@ -16,12 +16,13 @@ export default class FocalPoint extends GeometricObject {
         id = null,
         x = 400,
         y = 300,
-        rayCount = 64,          // Number of rays to emit
+        rayCount = 32,          // Number of rays to emit
         rayLength = 10000,      // Maximum ray length
         rotation = 0,
         edgeColor = '#ffff00',   // Yellow for visibility
         fillColor = '#ffff00',
-        material = null
+        material = null,
+        emitFromSurface = false,
     } = {}) {
         super({
             id,
@@ -37,6 +38,7 @@ export default class FocalPoint extends GeometricObject {
         this.rayCount = this.validateRayCount(rayCount);
         this.rayLength = this.validateRayLength(rayLength);
         this.radius = 8;    // Visual radius for rendering
+        this.emitFromSurface = emitFromSurface;
     }
 
     /**
@@ -140,6 +142,47 @@ export default class FocalPoint extends GeometricObject {
         const dx = x - this.position.x;
         const dy = y - this.position.y;
         return Math.sqrt(dx * dx + dy * dy) <= this.radius;
+    }
+
+    /**
+     * Get emit from surface setting
+     */
+    getEmitFromSurface() {
+        return this.emitFromSurface;
+    }
+
+    /**
+     * Set emit from surface setting
+     */
+    setEmitFromSurface(value) {
+        this.emitFromSurface = Boolean(value);
+    }
+
+    /**
+     * Generate ray origins and directions
+     * Returns array of {origin, direction} for rays emitted from the surface
+     */
+    getRayOriginsAndDirections() {
+        const rays = [];
+        const angleStep = (2 * Math.PI) / this.rayCount;
+
+        for (let i = 0; i < this.rayCount; i++) {
+            const angle = i * angleStep + this.rotation;
+            const direction = {
+                x: Math.cos(angle),
+                y: Math.sin(angle)
+            };
+
+            // Ray origin is on the surface of the focal point
+            const origin = {
+                x: this.position.x + this.radius * direction.x,
+                y: this.position.y + this.radius * direction.y
+            };
+
+            rays.push({ origin, direction });
+        }
+
+        return rays;
     }
 
     /**

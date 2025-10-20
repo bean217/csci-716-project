@@ -37,6 +37,18 @@
       />
       <p class="hint">Display size of focal point</p>
     </div>
+
+    <div class="property-group">
+      <label class="checkbox-label">
+        <input
+            type="checkbox"
+            :checked="object.emitFromSurface"
+            @change="updateEmitFromSurface($event.target.checked)"
+        />
+        <span>Emit from Surface</span>
+      </label>
+      <p class="hint">If enabled, rays emit from surface; otherwise from center</p>
+    </div>
   </div>
 </template>
 
@@ -48,24 +60,28 @@ const props = defineProps({
     type: Object,
     required: true
   }
-})
+});
 
-const sceneStore = useSceneStore()
+const sceneStore = useSceneStore();
 
 const updateRayCount = (value) => {
   if (isNaN(value) || value < 1) return
   sceneStore.updateObject(props.object.id, { rayCount: value })
-}
+};
 
 const updateRayLength = (value) => {
   if (isNaN(value) || value <= 0) return
   sceneStore.updateObject(props.object.id, { rayLength: value })
-}
+};
 
 const updateRadius = (value) => {
   if (isNaN(value) || value <= 0) return
   sceneStore.updateObject(props.object.id, { radius: value })
-}
+};
+
+const updateEmitFromSurface = (value) => {
+  sceneStore.updateObject(props.object.id, { emitFromSurface: value });
+};
 </script>
 
 <style scoped>
@@ -99,6 +115,21 @@ const updateRadius = (value) => {
 .property-group input:focus {
   border-color: #4a9eff;
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .hint {

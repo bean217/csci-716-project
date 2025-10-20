@@ -49,20 +49,52 @@ export default class RayTracer {
      */
     traceFocalPoint(focalPoint) {
         const allSegments = [];
-        const directions = focalPoint.getRayDirections();
 
-        // Determine if focal point is inside any object
-        const startingMedium = this.findContainingObject(focalPoint.position);
+        if (focalPoint.getEmitFromSurface()) {
+            const rayData = focalPoint.getRayOriginsAndDirections();
 
-        directions.forEach(direction => {
-            const ray = new Ray(focalPoint.position, direction, 1.0, 0);
-            const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
+            rayData.forEach(({ origin, direction }) => {
+                // Determine starting medium for this ray based on its surface origin
+                const startingMedium = this.findContainingObject(origin);
 
-            // Add all segments from this ray
-            allSegments.push(...segments);
-        });
+                const ray = new Ray(origin, direction, 1.0, 0);
+                const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
+
+                // Add all segments from this ray
+                allSegments.push(...segments);
+            });
+        } else {
+            const directions = focalPoint.getRayDirections();
+
+            // Determine if focal point is inside any object
+            const startingMedium = this.findContainingObject(focalPoint.position);
+
+            directions.forEach(direction => {
+                const ray = new Ray(focalPoint.position, direction, 1.0, 0);
+                const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
+
+                // Add all segments from this ray
+                allSegments.push(...segments);
+            });
+        }
 
         return allSegments;
+
+        // const allSegments = [];
+        // const directions = focalPoint.getRayDirections();
+        //
+        // // Determine if focal point is inside any object
+        // const startingMedium = this.findContainingObject(focalPoint.position);
+        //
+        // directions.forEach(direction => {
+        //     const ray = new Ray(focalPoint.position, direction, 1.0, 0);
+        //     const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
+        //
+        //     // Add all segments from this ray
+        //     allSegments.push(...segments);
+        // });
+        //
+        // return allSegments;
     }
 
     /**

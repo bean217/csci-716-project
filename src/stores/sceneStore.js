@@ -283,6 +283,9 @@ export const useSceneStore = defineStore('scene', {
                 if (updates.radius !== undefined) {
                     object.setRadius(updates.radius);
                 }
+                if (updates.emitFromSurface !== undefined) {
+                    object.setEmitFromSurface(updates.emitFromSurface);
+                }
             }
 
             // Force reactivity
