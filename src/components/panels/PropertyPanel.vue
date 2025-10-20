@@ -122,9 +122,14 @@
           <TriangleProperties :object="selectedObject" />
         </template>
 
-        <!-- EquilateralTriangle Properties -->
+        <!-- Equilateral Triangle Properties -->
         <template v-else-if="selectedObject.type === 'EquilateralTriangle'">
           <EquilateralTriangleProperties :object="selectedObject" />
+        </template>
+
+        <!-- Focal Point Properties -->
+        <template v-else-if="selectedObject.type === 'FocalPoint'">
+          <FocalPointProperties :object="selectedObject" />
         </template>
 
         <!-- Placeholder for other shapes -->
@@ -134,7 +139,7 @@
       </section>
 
       <!-- Material Properties Section -->
-      <section class="property-section">
+      <section class="property-section" v-if="selectedObject.type !== 'FocalPoint'">
         <h4>Material Properties</h4>
 
         <div class="property-group">
@@ -172,8 +177,8 @@
               class="slider"
           />
           <div class="range-labels">
-            <span>1.0</span>
-            <span>2.5</span>
+            <span>1.0 (Air)</span>
+            <span>2.5 (Diamond)</span>
           </div>
         </div>
       </section>
@@ -182,14 +187,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useSceneStore } from '@/stores/sceneStore'
-import RectangleProperties from './shape-properties/RectangleProperties.vue'
-import SquareProperties from './shape-properties/SquareProperties.vue'
-import EllipseProperties from './shape-properties/EllipseProperties.vue'
-import CircleProperties from './shape-properties/CircleProperties.vue'
-import TriangleProperties from './shape-properties/TriangleProperties.vue'
-import EquilateralTriangleProperties from './shape-properties/EquilateralTriangleProperties.vue'
+import { computed } from 'vue';
+import { useSceneStore } from '@/stores/sceneStore';
+import RectangleProperties from './shape-properties/RectangleProperties.vue';
+import SquareProperties from './shape-properties/SquareProperties.vue';
+import EllipseProperties from './shape-properties/EllipseProperties.vue';
+import CircleProperties from './shape-properties/CircleProperties.vue';
+import TriangleProperties from './shape-properties/TriangleProperties.vue';
+import EquilateralTriangleProperties from './shape-properties/EquilateralTriangleProperties.vue';
+import FocalPointProperties from './shape-properties/FocalPointProperties.vue';
 
 const sceneStore = useSceneStore();
 

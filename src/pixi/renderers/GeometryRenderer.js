@@ -44,6 +44,15 @@ export default class GeometryRenderer {
             { deep: true }
         );
 
+        // Watch for changes to focal points
+        watch(
+            () => this.sceneStore.focalPoints,
+            () => {
+                this.renderAll();
+            },
+            { deep: true }
+        );
+
         // Watch for selection changes
         watch(
             () => this.sceneStore.selectedObjectId,
@@ -63,6 +72,11 @@ export default class GeometryRenderer {
         // Render each object in the scene store
         this.sceneStore.objects.forEach(obj => {
             this.renderObject(obj);
+        });
+
+        // Render focal points
+        this.sceneStore.focalPoints.forEach(fp => {
+            this.renderObject(fp);
         });
     }
 
@@ -99,6 +113,9 @@ export default class GeometryRenderer {
             case 'Triangle':
             case 'EquilateralTriangle':
                 this.drawTriangle(graphic, obj, isSelected);
+                break;
+            case 'FocalPoint':
+                this.drawFocalPoint(graphic, obj, isSelected);
                 break;
             default:
                 console.warn(`Unknown object type: ${obj.type}`);
@@ -204,6 +221,62 @@ export default class GeometryRenderer {
         // Draw selection highlight
         if (isSelected) {
             this.drawSelectionHighlight(graphic, vertices)
+        }
+    }
+
+    /**
+     * Draw a focal point
+     */
+    drawFocalPoint(graphic, obj, isSelected) {
+        const vertices = obj.getVertices(16);
+
+        // Convert vertices to flat array
+        const points = [];
+        vertices.forEach(v => {
+            points.push(v.x, v.y);
+        });
+
+        // Draw filled circle
+        graphic.poly(points);
+        graphic.fill({
+            color: this.hexToNumber(obj.fillColor),
+            alpha: 0.8
+        });
+
+        // Draw stroke
+        graphic.poly(points);
+        graphic.stroke({
+            width: isSelected ? 3 : 2,
+            color: this.hexToNumber(obj.edgeColor),
+            alpha: 1
+        });
+
+        // Draw crosshair at center
+        const radius = obj.getRadius();
+        const px = obj.position.x;
+        const py = obj.position.y;
+
+        // Horizontal line
+        graphic.moveTo(px - radius, py);
+        graphic.lineTo(px + radius, py);
+        graphic.stroke({
+            width: 1,
+            color: this.hexToNumber(obj.edgeColor),
+            alpha: 1
+        });
+
+        // Vertical line
+        graphic.moveTo(px, py - radius);
+        graphic.lineTo(px, py + radius);
+        graphic.stroke({
+            width: 1,
+            color: this.hexToNumber(obj.edgeColor),
+            alpha: 1
+        });
+
+        // Draw selection highlight
+        if (isSelected) {
+            this.drawSelectionHighlight(graphic, vertices);
         }
     }
 

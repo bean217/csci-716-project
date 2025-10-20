@@ -8,6 +8,11 @@
 import { defineStore } from 'pinia';
 import Rectangle from '@/geometry/Rectangle.js';
 import Square from '@/geometry/Square.js';
+import Ellipse from '@/geometry/Ellipse.js';
+import Circle from '@/geometry/Circle.js';
+import Triangle from '@/geometry/Triangle.js';
+import EquilateralTriangle from '@/geometry/EquilateralTriangle.js';
+import FocalPoint from '@/geometry/FocalPoint.js';
 
 /**
  * Scene store manages all geometric objects in the scene
@@ -20,8 +25,8 @@ export const useSceneStore = defineStore('scene', {
         // Currently selected objectID
         selectedObjectId: null,
 
-        // focalPoint (light source/camera)
-        focalPoint: null,
+        // focalPoints (light sources/cameras)
+        focalPoints: [],
 
         // Target objects for ray tracing
         targets: []
@@ -31,6 +36,11 @@ export const useSceneStore = defineStore('scene', {
         // Get the currently selected object
         selectedObject: (state) => {
             if (!state.selectedObjectId) return null;
+
+            // Check if it is a focal point
+            const focalPoint = state.focalPoints.find(fp => fp.id === state.selectedObjectId);
+            if (focalPoint) return focalPoint;
+
             return state.objects.find(obj => obj.id === state.selectedObjectId) || null;
         },
 
@@ -63,6 +73,23 @@ export const useSceneStore = defineStore('scene', {
                 return
             }
 
+            // Special handling for FocalPoint - add to focalPoints array
+            if (object.type === 'FocalPoint') {
+                // Check for duplicate IDs in focal points
+                if (this.focalPoints.find(fp => fp.id === object.id)) {
+                    console.warn(`FocalPoint with id ${object.id} already exists`);
+                    return;
+                }
+
+                this.focalPoints.push(object);
+
+                if (select) {
+                    this.selectedObjectId = object.id;
+                }
+                console.log(`Added FocalPoint with id ${object.id}`);
+                return;
+            }
+
             // Check for duplicate IDs
             if (this.objects.find(obj => obj.id === object.id)) {
                 console.warn(`Object with id ${object.id} already exists`);
@@ -82,6 +109,17 @@ export const useSceneStore = defineStore('scene', {
          * Remove an object from the scene
          */
         removeObject(id) {
+            // Check if it is a focal point
+            const focalIndex = this.focalPoints.findIndex(fp => fp.id === id);
+            if (focalIndex !== -1) {
+                this.focalPoints.splice(focalIndex, 1);
+                if (this.selectedObjectId === id) {
+                    this.selectedObjectId = null;
+                }
+                console.log(`Removed FocalPoint with id ${id}`);
+                return;
+            }
+
             const index = this.objects.findIndex(obj => obj.id === id);
             if (index === -1) {
                 console.warn(`Object with id ${id} not found`);
@@ -116,6 +154,14 @@ export const useSceneStore = defineStore('scene', {
                 return;
             }
 
+            // Check if it's a focal point
+            const focalPoint = this.focalPoints.find(fp => fp.id === id);
+            if (focalPoint) {
+                this.selectedObjectId = id;
+                console.log('Selected FocalPoint');
+                return;
+            }
+
             const object = this.objects.find(obj => obj.id === id);
 
             if (!object) {
@@ -140,7 +186,22 @@ export const useSceneStore = defineStore('scene', {
          * @param {Object} updates - Object containing properties to update
          */
         updateObject(id, updates) {
-            const object = this.objects.find(obj => obj.id === id);
+            // Check if it is a focal point
+            let object = null;
+            let index = -1;
+            let isFocalPoint = false;
+
+            const focalIndex = this.focalPoints.findIndex(fp => fp.id === id);
+            if (focalIndex !== -1) {
+                object = this.focalPoints[focalIndex];
+                index = focalIndex;
+                isFocalPoint = true;
+            } else {
+                index = this.objects.findIndex(obj => obj.id === id);
+                if (index !== -1) {
+                    object = this.objects[index];
+                }
+            }
 
             if (!object) {
                 console.warn(`Cannot update: object with id ${id} not found`);
@@ -187,11 +248,51 @@ export const useSceneStore = defineStore('scene', {
                         object.setHeight(updates.height);
                     }
                 }
+            } else if (object.type === 'Ellipse' || object.type === 'Circle') {
+                if (object.type === 'Circle' && updates.radius !== undefined) {
+                    object.setRadius(updates.radius);
+                } else {
+                    if (updates.rx !== undefined) {
+                        object.setRx(updates.rx);
+                    }
+                    if (updates.ry !== undefined) {
+                        object.setRy(updates.ry);
+                    }
+                }
+            } else if (object.type === 'Triangle' || object.type === 'EquilateralTriangle') {
+                if (object.type === 'EquilateralTriangle' && updates.sideLength !== undefined) {
+                    object.setSideLength(updates.sideLength);
+                } else {
+                    if (updates.side1 !== undefined) {
+                        object.setSide1(updates.side1);
+                    }
+                    if (updates.side2 !== undefined) {
+                        object.setSide2(updates.side2);
+                    }
+                    if (updates.side3 !== undefined) {
+                        object.setSide3(updates.side3);
+                    }
+                }
+            } else if (object.type === 'FocalPoint') {
+                if (updates.rayCount !== undefined) {
+                    object.setRayCount(updates.rayCount);
+                }
+                if (updates.rayLength !== undefined) {
+                    object.setRayLength(updates.rayLength);
+                }
+                if (updates.radius !== undefined) {
+                    object.setRadius(updates.radius);
+                }
             }
 
-            // Trigger reactivity by creating a new array reference
-            // This ensures Vue/PixiJS watchers detect the change
-            this.objects = [...this.objects]
+            // Force reactivity
+            if (isFocalPoint) {
+                this.focalPoints[index] = object;
+            } else {
+                this.objects[index] = object;
+            }
+
+            console.log(`Updated ${object.type} (${id}):`, updates);
         },
 
         /**
@@ -209,6 +310,7 @@ export const useSceneStore = defineStore('scene', {
          */
         clearScene() {
             this.objects = [];
+            this.focalPoints = [];
             this.selectedObjectId = null;
             console.log('Scene cleared');
         },
@@ -221,6 +323,13 @@ export const useSceneStore = defineStore('scene', {
          * @returns {GeometricObject|null}
          */
         findObjectAtPoint(x, y) {
+            // Check focal points first (should be on top)
+            for (let i = this.focalPoints.length - 1; i >= 0; i--) {
+                if (this.focalPoints[i].containsPoint(x, y)) {
+                    return this.focalPoints[i];
+                }
+            }
+
             // Search from end to start (topmost objects first)
             for (let i = this.objects.length - 1; i >= 0; i--) {
                 if (this.objects[i].containsPoint(x, y)) {
@@ -231,12 +340,30 @@ export const useSceneStore = defineStore('scene', {
         },
 
         /**
+         * Select object at a given point
+         * @param {number} x - X coordinate
+         * @param {number} y - Y coordinate
+         * @returns {boolean} - Whether an object was selected
+         */
+        selectObjectAtPoint(x, y) {
+            const object = this.findObjectAtPoint(x, y);
+
+            if (object) {
+                this.selectObject(object.id);
+                return true;
+            } else {
+                this.deselectObject();
+                return false;
+            }
+        },
+
+        /**
          * Export scene to JSON
          */
         exportScene() {
             return {
                 objects: this.objects.map(obj => obj.toJSON()),
-                focalPoint: this.focalPoint ? this.focalPoint.toJSON() : null,
+                focalPoints: this.focalPoints.map(fp => fp.toJSON()),
                 targets: this.targets.map(t => t.toJSON())
             }
         },
@@ -249,17 +376,43 @@ export const useSceneStore = defineStore('scene', {
         importScene(json) {
             this.clearScene()
 
-            // TODO: Implement proper factory pattern for reconstructing different shape types
-            // For now, we'll just handle rectangles and squares
+            // Import focal points
+            if (json.focalPoints) {
+                json.focalPoints.forEach(fpData => {
+                    const focalPoint = FocalPoint.fromJSON(fpData)
+                    this.focalPoints.push(focalPoint)
+                })
+            }
+
+            // Factory to reconstruct objects by type
             if (json.objects) {
                 json.objects.forEach(objData => {
                     let object
-                    if (objData.type === 'Rectangle') {
-                        object = Rectangle.fromJSON(objData)
-                    } else if (objData.type === 'Square') {
-                        object = Square.fromJSON(objData)
+                    switch (objData.type) {
+                        case 'Rectangle':
+                            object = Rectangle.fromJSON(objData)
+                            break
+                        case 'Square':
+                            object = Square.fromJSON(objData)
+                            break
+                        case 'Ellipse':
+                            object = Ellipse.fromJSON(objData)
+                            break
+                        case 'Circle':
+                            object = Circle.fromJSON(objData)
+                            break
+                        case 'Triangle':
+                            object = Triangle.fromJSON(objData)
+                            break
+                        case 'EquilateralTriangle':
+                            object = EquilateralTriangle.fromJSON(objData)
+                            break
+                        case 'FocalPoint':
+                            // Focal points already handled above
+                            break
+                        default:
+                            console.warn(`Unknown object type: ${objData.type}`)
                     }
-                    // Add more shape types as they are implemented
 
                     if (object) {
                         this.addObject(object, false)
