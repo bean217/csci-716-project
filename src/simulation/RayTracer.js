@@ -20,6 +20,8 @@ export default class RayTracer {
             maxBounces: settings.maxBounces || 5,
             minIntensity: settings.minIntensity || 0.01,
             airRefractiveIndex: 1.0,
+            canvasWidth: settings.canvasWidth || 800,
+            canvasHeight: settings.canvasHeight || 600,
             ...settings
         };
     }
@@ -114,24 +116,38 @@ export default class RayTracer {
                 continue;
             }
 
-            // Stop if too many bounces
-            if (currentRay.generation >= this.settings.maxBounces) {
-                // Add final segment to max distance
-                const endPoint = currentRay.pointAt(remainingDistance);
-                parentSegments.push({
-                    start: startPoint,
-                    end: endPoint,
-                    children: []
-                });
-                continue;
-            }
-
-            // Find the closest intersection
+            // Find the closest intersection with objects
             const intersection = this.findClosestIntersection(currentRay, insideObject);
 
-            if (!intersection.hit) {
-                // No hit - ray continues to max distance
-                const endPoint = currentRay.pointAt(remainingDistance);
+            // Find distance to canvas boundary
+            const canvasBoundaryDist = this.getCanvasBoundaryDistance(currentRay);
+
+            // Determine what we hit first
+            const hitObject = intersection.hit;
+            const hitCanvas = canvasBoundaryDist !== null;
+
+            let closestHit = null;
+            let closestDistance = Infinity;
+
+            if (hitObject && hitCanvas) {
+                if (intersection.distance < canvasBoundaryDist) {
+                    closestHit = 'object';
+                    closestDistance = intersection.distance;
+                } else {
+                    closestHit = 'canvas';
+                    closestDistance = canvasBoundaryDist;
+                }
+            } else if (hitObject) {
+                closestHit = 'object';
+                closestDistance = intersection.distance;
+            } else if (hitCanvas) {
+                closestHit = 'canvas';
+                closestDistance = canvasBoundaryDist;
+            }
+
+            if (closestHit === 'canvas') {
+                // Hit canvas boundary first
+                const endPoint = currentRay.pointAt(canvasBoundaryDist);
                 parentSegments.push({
                     start: startPoint,
                     end: endPoint,
@@ -140,47 +156,233 @@ export default class RayTracer {
                 continue;
             }
 
-            // Check if intersection is within remaining distance
-            if (intersection.distance > remainingDistance) {
-                const endPoint = currentRay.pointAt(remainingDistance);
+            if (closestHit === 'object') {
+                // Hit an object
+                // Create segment to intersection point
+                const segment = {
+                    start: startPoint,
+                    end: { ...intersection.point },
+                    children: []
+                }
+                parentSegments.push(segment);
+
+                // Check if we have distance remaining for bounces
+                if (intersection.distance >= remainingDistance) {
+                    // Exceeded max distance - don't spawn children
+                    continue;
+                }
+
+                const newRemainingDistance = remainingDistance - intersection.distance;
+
+                if (newRemainingDistance <= 0 || currentRay.generation >= this.settings.maxBounces) {
+                    // Out of distance or bounces - don't spawn children
+                    continue;
+                }
+
+                // Calculate next rays (both reflection and refraction)
+                const nextRays = this.calculateNextRays(
+                    currentRay,
+                    intersection,
+                    insideObject
+                );
+
+                // Add all resulting rays to the queue as children of this segment
+                nextRays.forEach(result => {
+                    rayQueue.push({
+                        ray: result.ray,
+                        medium: result.medium,
+                        distance: newRemainingDistance,
+                        startPoint: { ...intersection.point },
+                        segments: segment.children  // Children are added to this segment
+                    });
+                });
+            } else {
+                // Hit nothing - extend to canvas boundary
+                const endPoint = this.getCanvasBoundaryIntersection(currentRay, Infinity);
                 parentSegments.push({
                     start: startPoint,
                     end: endPoint,
                     children: []
                 });
-                continue;
             }
-
-            // Create segment to intersection point
-            const segment = {
-                start: startPoint,
-                end: { ...intersection.point },
-                children: []
-            };
-            parentSegments.push(segment);
-
-            const newRemainingDistance = remainingDistance - intersection.distance;
-
-            // Calculate next rays (both reflection and refraction)
-            const nextRays = this.calculateNextRays(
-                currentRay,
-                intersection,
-                insideObject
-            );
-
-            // Add all resulting rays to the queue as children of this segment
-            nextRays.forEach(result => {
-                rayQueue.push({
-                    ray: result.ray,
-                    medium: result.medium,
-                    distance: newRemainingDistance,
-                    startPoint: { ...intersection.point },
-                    segments: segment.children  // Children are added to this segment
-                });
-            });
         }
 
         return segments;
+
+
+
+
+
+
+        // const segments = [];
+        //
+        // // Queue of rays to process: {ray, medium, distance, startPoint, segments}
+        // const rayQueue = [{
+        //     ray: ray,
+        //     medium: currentMedium,
+        //     distance: maxDistance,
+        //     startPoint: { ...ray.origin },
+        //     segments: segments  // Reference to where we should add child segments
+        // }];
+        //
+        // while (rayQueue.length > 0) {
+        //     const {
+        //         ray: currentRay,
+        //         medium: insideObject,
+        //         distance: remainingDistance,
+        //         startPoint,
+        //         segments: parentSegments
+        //     } = rayQueue.shift();
+        //
+        //     // Stop if intensity too low
+        //     if (currentRay.intensity < this.settings.minIntensity) {
+        //         continue;
+        //     }
+        //
+        //     // Stop if too many bounces
+        //     if (currentRay.generation >= this.settings.maxBounces) {
+        //         // Add final segment to max distance
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         parentSegments.push({
+        //             start: startPoint,
+        //             end: endPoint,
+        //             children: []
+        //         });
+        //         continue;
+        //     }
+        //
+        //     // Find the closest intersection
+        //     const intersection = this.findClosestIntersection(currentRay, insideObject);
+        //
+        //     if (!intersection.hit) {
+        //         // No hit - ray continues to max distance
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         parentSegments.push({
+        //             start: startPoint,
+        //             end: endPoint,
+        //             children: []
+        //         });
+        //         continue;
+        //     }
+        //
+        //     // Check if intersection is within remaining distance
+        //     if (intersection.distance > remainingDistance) {
+        //         const endPoint = currentRay.pointAt(remainingDistance);
+        //         parentSegments.push({
+        //             start: startPoint,
+        //             end: endPoint,
+        //             children: []
+        //         });
+        //         continue;
+        //     }
+        //
+        //     // Create segment to intersection point
+        //     const segment = {
+        //         start: startPoint,
+        //         end: { ...intersection.point },
+        //         children: []
+        //     };
+        //     parentSegments.push(segment);
+        //
+        //     const newRemainingDistance = remainingDistance - intersection.distance;
+        //
+        //     // Calculate next rays (both reflection and refraction)
+        //     const nextRays = this.calculateNextRays(
+        //         currentRay,
+        //         intersection,
+        //         insideObject
+        //     );
+        //
+        //     // Add all resulting rays to the queue as children of this segment
+        //     nextRays.forEach(result => {
+        //         rayQueue.push({
+        //             ray: result.ray,
+        //             medium: result.medium,
+        //             distance: newRemainingDistance,
+        //             startPoint: { ...intersection.point },
+        //             segments: segment.children  // Children are added to this segment
+        //         });
+        //     });
+        // }
+        //
+        // return segments;
+    }
+
+    /**
+     * Get distance to canvas boundary
+     * @param {Ray} ray - The ray
+     * @returns {number|null} Distance to boundary or null if no intersection
+     */
+    getCanvasBoundaryDistance(ray) {
+        const intersections = [];
+
+        // Check all four edges
+        // Left edge (x = 0)
+        if (ray.direction.x !== 0) {
+            const t = -ray.origin.x / ray.direction.x;
+            if (t > 0) {
+                const y = ray.origin.y + t * ray.direction.y;
+                if (y >= 0 && y <= this.settings.canvasHeight) {
+                    intersections.push(t);
+                }
+            }
+        }
+
+        // Right edge (x = canvasWidth)
+        if (ray.direction.x !== 0) {
+            const t = (this.settings.canvasWidth - ray.origin.x) / ray.direction.x;
+            if (t > 0) {
+                const y = ray.origin.y + t * ray.direction.y;
+                if (y >= 0 && y <= this.settings.canvasHeight) {
+                    intersections.push(t);
+                }
+            }
+        }
+
+        // Top edge (y = 0)
+        if (ray.direction.y !== 0) {
+            const t = -ray.origin.y / ray.direction.y;
+            if (t > 0) {
+                const x = ray.origin.x + t * ray.direction.x;
+                if (x >= 0 && x <= this.settings.canvasWidth) {
+                    intersections.push(t);
+                }
+            }
+        }
+
+        // Bottom edge (y = canvasHeight)
+        if (ray.direction.y !== 0) {
+            const t = (this.settings.canvasHeight - ray.origin.y) / ray.direction.y;
+            if (t > 0) {
+                const x = ray.origin.x + t * ray.direction.x;
+                if (x >= 0 && x <= this.settings.canvasWidth) {
+                    intersections.push(t);
+                }
+            }
+        }
+
+        // Return closest intersection
+        if (intersections.length > 0) {
+            return Math.min(...intersections);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get intersection point with canvas boundary
+     * @param {Ray} ray - The ray
+     * @param {number} maxDistance - Maximum distance to check
+     * @returns {Object} {x, y} point
+     */
+    getCanvasBoundaryIntersection(ray, maxDistance) {
+        const boundaryDist = this.getCanvasBoundaryDistance(ray);
+
+        if (boundaryDist !== null && boundaryDist < maxDistance) {
+            return ray.pointAt(boundaryDist);
+        }
+
+        return ray.pointAt(maxDistance);
     }
 
     /**
