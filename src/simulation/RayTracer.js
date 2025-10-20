@@ -79,22 +79,6 @@ export default class RayTracer {
         }
 
         return allSegments;
-
-        // const allSegments = [];
-        // const directions = focalPoint.getRayDirections();
-        //
-        // // Determine if focal point is inside any object
-        // const startingMedium = this.findContainingObject(focalPoint.position);
-        //
-        // directions.forEach(direction => {
-        //     const ray = new Ray(focalPoint.position, direction, 1.0, 0);
-        //     const segments = this.traceRay(ray, focalPoint.rayLength, startingMedium);
-        //
-        //     // Add all segments from this ray
-        //     allSegments.push(...segments);
-        // });
-        //
-        // return allSegments;
     }
 
     /**
@@ -197,79 +181,6 @@ export default class RayTracer {
         }
 
         return segments;
-
-        // const paths = [];
-        //
-        // // Queue of rays to process: {ray, medium, distance, path}
-        // const rayQueue = [{
-        //     ray: ray,
-        //     medium: currentMedium,
-        //     distance: maxDistance,
-        //     path: [{ ...ray.origin }]
-        // }];
-        //
-        // while (rayQueue.length > 0) {
-        //     const { ray: currentRay, medium: insideObject, distance: remainingDistance, path } = rayQueue.shift();
-        //
-        //     // Stop if intensity too low
-        //     if (currentRay.intensity < this.settings.minIntensity) {
-        //         if (path.length > 1) {
-        //             paths.push(path);
-        //         }
-        //         continue;
-        //     }
-        //
-        //     // Stop if too many bounces
-        //     if (currentRay.generation >= this.settings.maxBounces) {
-        //         // Add endpoint
-        //         const endPoint = currentRay.pointAt(remainingDistance);
-        //         path.push(endPoint);
-        //         paths.push(path);
-        //         continue;
-        //     }
-        //
-        //     // Find the closest intersection
-        //     const intersection = this.findClosestIntersection(currentRay, insideObject);
-        //
-        //     if (!intersection.hit) {
-        //         // No hit - ray continues to max distance
-        //         const endPoint = currentRay.pointAt(remainingDistance);
-        //         path.push(endPoint);
-        //         paths.push(path);
-        //         continue;
-        //     }
-        //
-        //     // Check if intersection is within remaining distance
-        //     if (intersection.distance > remainingDistance) {
-        //         const endPoint = currentRay.pointAt(remainingDistance);
-        //         path.push(endPoint);
-        //         paths.push(path);
-        //         continue;
-        //     }
-        //
-        //     // Add intersection point path
-        //     const newPath = [...path, { ...intersection.point }];
-        //     const newRemainingDistance = remainingDistance - intersection.distance;
-        //
-        //     // Calculate next rays (both reflection and refraction)
-        //     const nextRays = this.calculateNextRays(
-        //         currentRay,
-        //         intersection,
-        //         insideObject
-        //     );
-        //
-        //     // Add all resulting rays to the queue
-        //     nextRays.forEach(result => {
-        //         rayQueue.push({
-        //             ray: result.ray,
-        //             medium: result.medium,
-        //             distance: newRemainingDistance,
-        //             path: [...newPath]
-        //         });
-        //     });
-        // }
-        //
-        // return paths;
     }
 
     /**

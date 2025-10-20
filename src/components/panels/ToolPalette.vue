@@ -52,7 +52,7 @@ const addFocalPoint = () => {
   const focalPoint = new FocalPoint({
     x: position.x,
     y: position.y,
-    rayCount: 64,
+    rayCount: 32,
     rayLength: 1000
   })
 
