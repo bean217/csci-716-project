@@ -1,13 +1,16 @@
 import * as PIXI from 'pixi.js'
 import GeometryRenderer from '@/pixi/renderers/GeometryRenderer.js';
+import RayRenderer from '@/pixi/renderers/RayRenderer.js';
 import InteractionManager from '@/pixi/interactions/InteractionManager.js';
 
 export default class PixiApp {
-    constructor(container, sceneStore = null) {
+    constructor(container, sceneStore = null, simulationStore = null) {
         this.container = container
         this.app = null;
         this.sceneStore = sceneStore;
+        this.simulationStore = simulationStore;
         this.geometryRenderer = null;
+        this.rayRenderer = null;
         this.interactionManager = null;
     }
 
@@ -33,7 +36,15 @@ export default class PixiApp {
 
         // Initialize geometry renderer if store is provided
         if (this.sceneStore) {
+            // Ray renderer first (bottom layer)
+            if (this.simulationStore) {
+                this.rayRenderer = new RayRenderer(this.app, this.sceneStore, this.simulationStore);
+            }
+
+            // Geometry renderer (top layer)
             this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
+
+            // Interaction manager
             this.interactionManager = new InteractionManager(this.app, this.sceneStore);
         }
     }
@@ -49,6 +60,14 @@ export default class PixiApp {
 
     destroy() {
         window.removeEventListener('resize', this.handleResize);
+
+        if (this.interactionManager) {
+            this.interactionManager.destroy();
+        }
+
+        if (this.rayRenderer) {
+            this.rayRenderer.destroy();
+        }
 
         if (this.geometryRenderer) {
             this.geometryRenderer.destroy();

@@ -5,15 +5,17 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useSceneStore } from '@/stores/sceneStore';
+import { useSimulationStore } from '@/stores/simulationStore';
 import PixiApp from '@/pixi/core/PixiApp.js';
 
 const canvasContainer = ref(null);
 const sceneStore = useSceneStore();
+const simulationStore = useSimulationStore();
 let pixiApp = null;
 
 onMounted(async () => {
   // Initialize PixiJS application
-  pixiApp = new PixiApp(canvasContainer.value, sceneStore);
+  pixiApp = new PixiApp(canvasContainer.value, sceneStore, simulationStore);
   await pixiApp.init(canvasContainer.value)
 })
 
