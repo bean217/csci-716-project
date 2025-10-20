@@ -20,7 +20,7 @@ export default class RayRenderer {
 
         // Container for rays (rendered below shapes)
         this.container = new PIXI.Container();
-        this.app.stage.addChildAt(this.container, 0);   // Add at bottom layer
+        this.app.stage.addChild(this.container);   // Add on top layer
 
         // Ray tracer
         this.rayTracer = new RayTracer(sceneStore, {

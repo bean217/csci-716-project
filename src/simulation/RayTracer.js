@@ -49,9 +49,12 @@ export default class RayTracer {
         const paths = [];
         const directions = focalPoint.getRayDirections();
 
+        // Determine if focal point is inside any object
+        const startingMedium = this.findContainingObject(focalPoint.position);
+
         directions.forEach(direction => {
             const ray = new Ray(focalPoint.position, direction, 1.0, 0);
-            const path = this.traceRay(ray, focalPoint.rayLength);
+            const path = this.traceRay(ray, focalPoint.rayLength, startingMedium);
 
             if (path.length > 0) {
                 paths.push(path);
@@ -65,12 +68,14 @@ export default class RayTracer {
      * Trace a single ray through the scene
      * @param {Ray} ray - The ray to trace
      * @param {number} maxDistance - Maximum distance to trace
-     * @param {Array} Array of points representing the ray path
+     * @param {Object|null} currentMedium - The object the ray is currently inside (null = air)
+     * @returns {Array} Array of points representing the ray path
      */
-    traceRay(ray, maxDistance) {
+    traceRay(ray, maxDistance, currentMedium = null) {
         const path = [{ ...ray.origin }];
         let currentRay = ray;
         let remainingDistance = maxDistance;
+        let insideObject = currentMedium;
 
         for (let bounce = 0; bounce < this.settings.maxBounces; bounce++) {
             // Stop if intensity too low
@@ -79,7 +84,7 @@ export default class RayTracer {
             }
 
             // Find the closest intersection
-            const intersection = this.findClosestIntersection(currentRay);
+            const intersection = this.findClosestIntersection(currentRay, insideObject);
 
             if (!intersection.hit) {
                 // No hit - ray continues to max distance
@@ -99,36 +104,66 @@ export default class RayTracer {
             path.push({ ...intersection.point });
             remainingDistance -= intersection.distance;
 
-            // Calculate next ray based on material properties
-            const material = intersection.object.material;
-            const nextRay = this.calculateNextRay(
+            // Calculate next ray based on material properties and medium transition
+            const result = this.calculateNextRay(
                 currentRay,
                 intersection,
-                material
+                insideObject
             );
 
-            if (!nextRay) {
+            if (!result) {
                 // Ray absorbed
                 break;
             }
 
-            currentRay = nextRay;
+            currentRay = result.ray;
+            insideObject = result.medium;
         }
 
         return path;
     }
 
     /**
+     * Find which object (if any) contains a given point
+     * @param {Object} point - {x, y}
+     * @returns {Object|null} The containing object or null if in air
+     */
+    findContainingObject(point) {
+        // Check objects from top to bottom (last added = on top)
+        for (let i = this.sceneStore.objects.length - 1; i >= 0; i--) {
+            const object = this.sceneStore.objects[i];
+            if (object.containsPoint(point.x, point.y)) {
+                return object;
+            }
+        }
+        return null;    // Point is in air
+    }
+
+    /**
      // TODO: This will be later optimized by spacial-accelerated structures
      * Find the closest intersection with scene objects
      * @param {Ray} ray - The ray to test
+     * @param {Object|null} currentMedium - The object the ray is currently inside (null = air)
      * @returns {Intersection}
      */
-    findClosestIntersection(ray) {
+    findClosestIntersection(ray, currentMedium) {
         const intersections = [];
 
-        // Test against all objects
+        // If we're inside an object, check for exit intersection
+        if (currentMedium) {
+            const intersection = GeometryMath.rayObjectIntersection(ray, currentMedium);
+            if (intersection.hit) {
+                intersections.push(intersection);
+            }
+        }
+
+        // Test against all other objects
         this.sceneStore.objects.forEach(object => {
+            // Ski[ the object we're currently inside
+            if (currentMedium && object.id === currentMedium.id) {
+                return;
+            }
+
             const intersection = GeometryMath.rayObjectIntersection(ray, object);
             if (intersection.hit) {
                 intersections.push(intersection);
@@ -142,13 +177,27 @@ export default class RayTracer {
      * Calculate the next ray after hitting a surface
      * @param {Ray} ray - Current ray
      * @param {Intersection} intersection - Intersection info
-     * @param {Material} material - surface material
-     * @returns {Ray|null} Next ray or null if absorbed
+     * @param {Object|null} currentMedium - surface material
+     * @returns {Object|null} {ray: Ray, medium: Object|null} or null if absorbed
      */
-    calculateNextRay(ray, intersection, material) {
+    calculateNextRay(ray, intersection, currentMedium) {
+        const material = intersection.object.material;
         const reflectivity = material.reflectivity;
-        const n1 = this.settings.airRefractiveIndex;
-        const n2 = material.refractiveIndex;
+
+        // Determine if we're entering or exiting the object
+        const entering = currentMedium === null || currentMedium.id !== intersection.object.id;
+
+        // Set refractive indices
+        let n1, n2;
+        if (entering) {
+            // Entering object: from air to material
+            n1 = this.settings.airRefractiveIndex;
+            n2 = material.refractiveIndex;
+        } else {
+            // Exiting object: from material to air
+            n1 = material.refractiveIndex;
+            n2 = this.settings.airRefractiveIndex;
+        }
 
         // Calculate angle of incidence
         const cosTheta = -LightCalculator.dot(ray.direction, intersection.normal);
@@ -156,10 +205,13 @@ export default class RayTracer {
         // Pure reflection (mirror)
         if (reflectivity >= 0.99) {
             const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-            return ray.spawn(intersection.point, reflectedDir, reflectivity);
+            return {
+                ray: ray.spawn(intersection.point, reflectedDir, reflectivity),
+                medium: currentMedium   // stay in the same medium
+            };
         }
 
-        // Pure refraction (glass with no reflection)
+        // Pure refraction (glass with minimal reflection
         if (reflectivity <= 0.01) {
             const refractedDir = LightCalculator.refract(
                 ray.direction,
@@ -169,24 +221,37 @@ export default class RayTracer {
             );
 
             if (refractedDir) {
-                return ray.spawn(intersection.point, refractedDir, 1 - reflectivity);
+                // Successful refraction - change medium
+                const newMedium = entering ? intersection.object : null;
+                return {
+                    ray: ray.spawn(intersection.point, refractedDir, 1 - reflectivity),
+                    medium: newMedium
+                };
             } else {
                 // Total internal reflection
                 const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-                return ray.spawn(intersection.point, reflectedDir, 1.0);
+                return {
+                    ray: ray.spawn(intersection.point, reflectedDir, 1.0),
+                    medium: currentMedium   // stay in the same medium
+                };
             }
         }
 
-        // Mix reflection/refraction (use Fresnel)
+        // Mixed reflection/refraction (use Fresnel)
         const fresnelReflectance = LightCalculator.fresnelReflectance(cosTheta, n1, n2);
 
-        // For simplicity, we'll just do reflection
-        // A more advanced implementation would probabilistically choose reflection vs refraction
-        // TODO: Potentially update to use advanced implementations strategy
+        // Decide: reflection or refraction
+        // For visualization, we'll deterministically choose based on Fresnel
+        // TODO: Update the following to render rays but modify their intensity
         if (Math.random() < fresnelReflectance || Math.random() < reflectivity) {
+            // Reflection
             const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-            return ray.spawn(intersection.point, reflectedDir, reflectivity);
+            return {
+                ray: ray.spawn(intersection.point, reflectedDir, reflectivity),
+                medium: currentMedium   // stay in the same medium
+            };
         } else {
+            // Refraction
             const refractedDir = LightCalculator.refract(
                 ray.direction,
                 intersection.normal,
@@ -195,11 +260,18 @@ export default class RayTracer {
             );
 
             if (refractedDir) {
-                return ray.spawn(intersection.point, refractedDir, 1 - reflectivity);
+                const newMedium = entering ? intersection.object : null;
+                return {
+                    ray: ray.spawn(intersection.point, refractedDir, 1 - reflectivity),
+                    medium: newMedium
+                };
             } else {
                 // Total internal reflection
                 const reflectedDir = LightCalculator.reflect(ray.direction, intersection.normal);
-                return ray.spawn(intersection.point, reflectedDir, 1.0);
+                return {
+                    ray: ray.spawn(intersection.point, reflectedDir, 1.0),
+                    medium: currentMedium
+                };
             }
         }
     }

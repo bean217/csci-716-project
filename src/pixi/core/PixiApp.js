@@ -36,13 +36,13 @@ export default class PixiApp {
 
         // Initialize geometry renderer if store is provided
         if (this.sceneStore) {
+            // Geometry renderer (top layer)
+            this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
+
             // Ray renderer first (bottom layer)
             if (this.simulationStore) {
                 this.rayRenderer = new RayRenderer(this.app, this.sceneStore, this.simulationStore);
             }
-
-            // Geometry renderer (top layer)
-            this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
 
             // Interaction manager
             this.interactionManager = new InteractionManager(this.app, this.sceneStore);
