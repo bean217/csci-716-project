@@ -25,7 +25,9 @@ export default class RayRenderer {
         // Ray tracer
         this.rayTracer = new RayTracer(sceneStore, {
             maxBounces: simulationStore.maxBounces,
-            minIntensity: simulationStore.minIntensity
+            minIntensity: simulationStore.minIntensity,
+            canvasWidth: app.screen.width,
+            canvasHeight: app.screen.height
         });
 
         // Graphics for rays
