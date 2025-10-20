@@ -18,7 +18,7 @@ export default class Square extends Rectangle {
         sideLength = 80,
         rotation = 0,
         edgeColor = '#ffffff',
-        fillColor = '#ffffff',
+        fillColor = '#666666',
         material = null
     } = {}) {
         super({

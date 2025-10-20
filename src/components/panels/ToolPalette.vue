@@ -23,10 +23,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useSceneStore } from '@/stores/sceneStore'
-import Rectangle from '@/geometry/Rectangle'
-import Square from '@/geometry/Square'
+import { ref } from 'vue';
+import { useSceneStore } from '@/stores/sceneStore';
+import Rectangle from '@/geometry/Rectangle';
+import Square from '@/geometry/Square';
+import Ellipse from '@/geometry/Ellipse';
+import Circle from '@/geometry/Circle';
+import Triangle from '@/geometry/Triangle';
+import EquilateralTriangle from '@/geometry/EquilateralTriangle';
 
 const sceneStore = useSceneStore()
 const selectedShape = ref('')
@@ -52,41 +56,56 @@ const handleShapeSelection = () => {
         y: position.y,
         width: 100,
         height: 60
-      })
-      break
+      });
+      break;
 
     case 'Square':
       newObject = new Square({
         x: position.x,
         y: position.y,
         sideLength: 80
-      })
-      break
+      });
+      break;
 
     case 'Ellipse':
-      // TODO: Implement when Ellipse class is ready
-      console.warn('Ellipse not yet implemented')
-      break
+      newObject = new Ellipse({
+        x: position.x,
+        y: position.y,
+        rx: 60,
+        ry: 40
+      });
+      break;
 
     case 'Circle':
-      // TODO: Implement when Circle class is ready
-      console.warn('Circle not yet implemented')
-      break
+      newObject = new Circle({
+        x: position.x,
+        y: position.y,
+        radius: 50,
+      });
+      break;
 
     case 'Triangle':
-      // TODO: Implement when Triangle class is ready
-      console.warn('Triangle not yet implemented')
-      break
+      newObject = new Triangle({
+        x: position.x,
+        y: position.y,
+        side1: 60,
+        side2: 60,
+        side3: 60
+      });
+      break;
 
     case 'EquilateralTriangle':
-      // TODO: Implement when EquilateralTriangle class is ready
-      console.warn('EquilateralTriangle not yet implemented')
-      break
+      newObject = new EquilateralTriangle({
+        x: position.x,
+        y: position.y,
+        sideLength: 60
+      });
+      break;
   }
 
   if (newObject) {
-    sceneStore.addObject(newObject, true)
-    console.log(`Created ${shapeType}`)
+    sceneStore.addObject(newObject, true);
+    console.log(`Created ${shapeType}`);
   }
 
   // Reset dropdown to placeholder

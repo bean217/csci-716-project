@@ -107,6 +107,26 @@
           <SquareProperties :object="selectedObject" />
         </template>
 
+        <!-- Ellipse Properties -->
+        <template v-else-if="selectedObject.type === 'Ellipse'">
+          <EllipseProperties :object="selectedObject" />
+        </template>
+
+        <!-- Circle Properties -->
+        <template v-else-if="selectedObject.type === 'Circle'">
+          <CircleProperties :object="selectedObject" />
+        </template>
+
+        <!-- Triangle Properties -->
+        <template v-else-if="selectedObject.type === 'Triangle'">
+          <TriangleProperties :object="selectedObject" />
+        </template>
+
+        <!-- EquilateralTriangle Properties -->
+        <template v-else-if="selectedObject.type === 'EquilateralTriangle'">
+          <EquilateralTriangleProperties :object="selectedObject" />
+        </template>
+
         <!-- Placeholder for other shapes -->
         <template v-else>
           <p class="placeholder-text">Shape-specific properties will appear here</p>
@@ -152,8 +172,8 @@
               class="slider"
           />
           <div class="range-labels">
-            <span>1.0 (Air)</span>
-            <span>2.5 (Diamond)</span>
+            <span>1.0</span>
+            <span>2.5</span>
           </div>
         </div>
       </section>
@@ -166,32 +186,38 @@ import { computed } from 'vue'
 import { useSceneStore } from '@/stores/sceneStore'
 import RectangleProperties from './shape-properties/RectangleProperties.vue'
 import SquareProperties from './shape-properties/SquareProperties.vue'
+import EllipseProperties from './shape-properties/EllipseProperties.vue'
+import CircleProperties from './shape-properties/CircleProperties.vue'
+import TriangleProperties from './shape-properties/TriangleProperties.vue'
+import EquilateralTriangleProperties from './shape-properties/EquilateralTriangleProperties.vue'
 
-const sceneStore = useSceneStore()
+const sceneStore = useSceneStore();
 
-const selectedObject = computed(() => sceneStore.selectedObject)
+const selectedObject = computed(() => sceneStore.selectedObject);
 
 const rotationDegrees = computed(() => {
-  if (!selectedObject.value) return 0
-  return Math.round(selectedObject.value.getRotationDegrees())
+  if (!selectedObject.value) return 0;
+  return Math.round(selectedObject.value.getRotationDegrees());
 })
 
 const updateProperty = (property, value) => {
-  if (!selectedObject.value) return
-
-  sceneStore.updateSelectedObject({ [property]: value })
+  if (!selectedObject.value) return;
+  // Trigger reactivity by updating through the store
+  sceneStore.updateSelectedObject({ [property]: value });
 }
 
 const updateRotation = (degrees) => {
-  if (!selectedObject.value) return
+  if (!selectedObject.value) return;
 
-  const radians = degrees * (Math.PI / 180)
-  sceneStore.updateSelectedObject({ rotation: radians })
+  // Normalize degrees to 0-360 range
+  const normalized = ((degrees % 360) + 360) % 360;
+  const radians = normalized * (Math.PI / 180);
+  sceneStore.updateSelectedObject({ rotation: radians });
 }
 
 const deleteObject = () => {
   if (selectedObject.value) {
-    sceneStore.removeSelectedObject()
+    sceneStore.removeSelectedObject();
   }
 }
 </script>

@@ -97,7 +97,7 @@ export default class GeometryRenderer {
                 this.drawEllipse(graphic, obj, isSelected);
                 break;
             case 'Triangle':
-            case 'Equilateral Triangle':
+            case 'EquilateralTriangle':
                 this.drawTriangle(graphic, obj, isSelected);
                 break;
             default:
@@ -146,16 +146,65 @@ export default class GeometryRenderer {
      * Draw an ellipse
      */
     drawEllipse(graphic, obj, isSelected) {
-        // TODO: Implement when Ellipse class is ready
-        console.warn('Ellipse rendering not yet implemented');
+        const vertices = obj.getVertices(32);
+        // Convert vertices to flat array
+        const points = [];
+        vertices.forEach(v => {
+            points.push(v.x, v.y);
+        });
+
+        // Draw filled polygon
+        graphic.poly(points);
+        graphic.fill({
+            color: this.hexToNumber(obj.fillColor),
+            alpha: 1
+        })
+
+        // Draw stroke
+        graphic.poly(points);
+        graphic.stroke({
+            width: isSelected ? 3 : 2,
+            color: this.hexToNumber(obj.edgeColor),
+            alpha: 1
+        });
+
+        // Draw selection highlight
+        if (isSelected) {
+            this.drawSelectionHighlight(graphic, vertices);
+        }
     }
 
     /**
      * Draw triangle
      */
     drawTriangle(graphic, obj, isSelected) {
-        // TODO: Implement when Triangle class is ready
-        console.warn('Triangle rendering not yet implemented');
+        const vertices = obj.getVertices()
+
+        // Convert vertices to flat array
+        const points = []
+        vertices.forEach(v => {
+            points.push(v.x, v.y)
+        })
+
+        // Draw filled polygon
+        graphic.poly(points)
+        graphic.fill({
+            color: this.hexToNumber(obj.fillColor),
+            alpha: 1
+        })
+
+        // Draw stroke
+        graphic.poly(points)
+        graphic.stroke({
+            width: isSelected ? 3 : 2,
+            color: this.hexToNumber(obj.edgeColor),
+            alpha: 1
+        })
+
+        // Draw selection highlight
+        if (isSelected) {
+            this.drawSelectionHighlight(graphic, vertices)
+        }
     }
 
     /**
