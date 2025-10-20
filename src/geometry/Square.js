@@ -43,9 +43,9 @@ export default class Square extends Rectangle {
 
     // Side length setter
     setSideLength(sideLength) {
-        const validated = this.validateDimension(length, 'sideLength');
-        this.width = sideLength;
-        this.height = sideLength;
+        const validated = this.validateDimension(sideLength, 'sideLength');
+        this.width = validated;
+        this.height = validated;
     }
 
     /**
