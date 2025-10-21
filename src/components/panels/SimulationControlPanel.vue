@@ -1,115 +1,140 @@
 <template>
   <div class="simulation-control-panel">
-    <h3>Ray Tracing Settings</h3>
-
-    <!-- Toggle Rays -->
-    <div class="property-group">
-      <label class="checkbox-label">
-        <input
-            type="checkbox"
-            :checked="simulationStore.showRays"
-            @change="simulationStore.toggleRays()"
-        />
-        <span>Show Rays</span>
-      </label>
+    <div class="panel-header" @click="isExpanded = !isExpanded">
+      <h3>{{ isExpanded ? '▼' : '▶' }} Ray Tracing Settings</h3>
     </div>
 
-    <!-- Toggle BVH -->
-    <div class="property-group">
-      <label class="checkbox-label">
-        <input
-            type="checkbox"
-            :checked="simulationStore.useBVH"
-            @change="simulationStore.toggleBVH()"
-        />
-        <span>Use BVH</span>
-      </label>
+    <div v-show="isExpanded" class="panel-content">
+
+      <!-- Toggle Rays -->
+      <div class="property-group">
+        <label class="checkbox-label">
+          <input
+              type="checkbox"
+              :checked="simulationStore.showRays"
+              @change="simulationStore.toggleRays()"
+          />
+          <span>Show Rays</span>
+        </label>
+      </div>
+
+      <!-- Toggle BVH -->
+      <div class="property-group">
+        <label class="checkbox-label">
+          <input
+              type="checkbox"
+              :checked="simulationStore.useBVH"
+              @change="simulationStore.toggleBVH()"
+          />
+          <span>Use BVH</span>
+        </label>
+      </div>
+
+      <template v-if="simulationStore.showRays">
+        <!-- Max Bounces -->
+        <div class="property-group">
+          <label>
+            Max Bounces
+            <span class="property-value">{{ simulationStore.maxBounces }}</span>
+          </label>
+          <input
+              type="range"
+              :value="simulationStore.maxBounces"
+              @input="simulationStore.setMaxBounces(parseInt($event.target.value))"
+              min="0"
+              max="20"
+              step="1"
+              class="slider"
+          />
+          <div class="range-labels">
+            <span>0</span>
+            <span>20</span>
+          </div>
+        </div>
+
+        <!-- Ray Width -->
+        <div class="property-group">
+          <label>
+            Ray Width
+            <span class="property-value">{{ simulationStore.rayWidth.toFixed(1) }}</span>
+          </label>
+          <input
+              type="range"
+              :value="simulationStore.rayWidth"
+              @input="simulationStore.setRayWidth(parseFloat($event.target.value))"
+              min="0.5"
+              max="5"
+              step="0.5"
+              class="slider"
+          />
+          <div class="range-labels">
+            <span>0.5</span>
+            <span>5.0</span>
+          </div>
+        </div>
+
+        <!-- Ray Color -->
+        <div class="property-group color-group">
+          <label>Ray Color</label>
+          <div class="color-input-wrapper">
+            <input
+                type="color"
+                :value="simulationStore.rayColor"
+                @input="simulationStore.setRayColor($event.target.value)"
+                class="color-picker"
+            />
+            <input
+                type="text"
+                :value="simulationStore.rayColor"
+                @input="simulationStore.setRayColor($event.target.value)"
+                class="color-text"
+                placeholder="#00ff00"
+            />
+          </div>
+        </div>
+      </template>
     </div>
-
-    <template v-if="simulationStore.showRays">
-      <!-- Max Bounces -->
-      <div class="property-group">
-        <label>
-          Max Bounces
-          <span class="property-value">{{ simulationStore.maxBounces }}</span>
-        </label>
-        <input
-            type="range"
-            :value="simulationStore.maxBounces"
-            @input="simulationStore.setMaxBounces(parseInt($event.target.value))"
-            min="0"
-            max="20"
-            step="1"
-            class="slider"
-        />
-        <div class="range-labels">
-          <span>0</span>
-          <span>20</span>
-        </div>
-      </div>
-
-      <!-- Ray Width -->
-      <div class="property-group">
-        <label>
-          Ray Width
-          <span class="property-value">{{ simulationStore.rayWidth.toFixed(1) }}</span>
-        </label>
-        <input
-            type="range"
-            :value="simulationStore.rayWidth"
-            @input="simulationStore.setRayWidth(parseFloat($event.target.value))"
-            min="0.5"
-            max="5"
-            step="0.5"
-            class="slider"
-        />
-        <div class="range-labels">
-          <span>0.5</span>
-          <span>5.0</span>
-        </div>
-      </div>
-
-      <!-- Ray Color -->
-      <div class="property-group color-group">
-        <label>Ray Color</label>
-        <div class="color-input-wrapper">
-          <input
-              type="color"
-              :value="simulationStore.rayColor"
-              @input="simulationStore.setRayColor($event.target.value)"
-              class="color-picker"
-          />
-          <input
-              type="text"
-              :value="simulationStore.rayColor"
-              @input="simulationStore.setRayColor($event.target.value)"
-              class="color-text"
-              placeholder="#00ff00"
-          />
-        </div>
-      </div>
-    </template>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useSimulationStore } from '@/stores/simulationStore'
 
 const simulationStore = useSimulationStore()
+const isExpanded = ref(false)
 </script>
 
 <style scoped>
 .simulation-control-panel {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #444;
+  padding: 12px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.simulation-control-panel h3 {
+.panel-header {
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+
+.panel-header:hover h3 {
+  color: #6bb3ff;
+}
+
+.panel-header h3 {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 12px;
   color: #ffffff;
+  margin: 0;
+  transition: color 0.2s;
+}
+
+.panel-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #444;
 }
 
 .property-group {
@@ -119,38 +144,43 @@ const simulationStore = useSimulationStore()
 .property-group label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-size: 13px;
   color: #cccccc;
   margin-bottom: 6px;
 }
 
 .property-value {
-  font-weight: 600;
   color: #4a9eff;
+  font-weight: 600;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
   cursor: pointer;
-  user-select: none;
 }
 
 .checkbox-label input[type="checkbox"] {
   margin-right: 8px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+}
+
+.checkbox-label span {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 500;
 }
 
 .slider {
   width: 100%;
   height: 6px;
-  background: #444;
+  background: #555;
   border-radius: 3px;
   outline: none;
   -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .slider::-webkit-slider-thumb {
@@ -190,28 +220,32 @@ const simulationStore = useSimulationStore()
   margin-top: 4px;
 }
 
-.color-group .color-input-wrapper {
+.color-group {
+  margin-bottom: 8px;
+}
+
+.color-input-wrapper {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .color-picker {
-  width: 50px;
+  width: 60px;
   height: 36px;
-  padding: 2px;
-  background: #333;
   border: 1px solid #555;
   border-radius: 4px;
   cursor: pointer;
+  background: transparent;
 }
 
 .color-picker::-webkit-color-swatch-wrapper {
-  padding: 0;
+  padding: 2px;
 }
 
 .color-picker::-webkit-color-swatch {
-  border: none;
   border-radius: 2px;
+  border: none;
 }
 
 .color-text {
@@ -222,6 +256,7 @@ const simulationStore = useSimulationStore()
   border: 1px solid #555;
   border-radius: 4px;
   font-size: 13px;
+  font-family: 'Courier New', monospace;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -229,5 +264,12 @@ const simulationStore = useSimulationStore()
 .color-text:focus {
   border-color: #4a9eff;
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.hint {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+  font-style: italic;
 }
 </style>

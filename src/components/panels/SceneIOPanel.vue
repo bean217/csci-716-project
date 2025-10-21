@@ -1,44 +1,45 @@
 <template>
   <div class="scene-io-panel">
-    <h3>Scene Management</h3>
-
-    <!-- Export Section -->
-    <div class="io-section">
-      <h4>Export Scene</h4>
-      <button @click="exportScene" class="io-btn export-btn">
-        💾 Save Scene
-      </button>
-      <p class="hint">Download current scene as JSON file</p>
+    <div class="panel-header" @click="isExpanded = !isExpanded">
+      <h3>{{ isExpanded ? '▼' : '▶' }} Scene Management</h3>
     </div>
 
-    <!-- Import Section -->
-    <div class="io-section">
-      <h4>Import Scene</h4>
-      <input
-          ref="fileInput"
-          type="file"
-          accept=".json"
-          @change="handleFileSelect"
-          style="display: none"
-      />
-      <button @click="triggerFileInput" class="io-btn import-btn">
-        📂 Load Scene
-      </button>
-      <p class="hint">Load scene from JSON file</p>
-    </div>
+    <div v-show="isExpanded" class="panel-content">
+      <!-- Export Section -->
+      <div class="io-section">
+        <button @click="exportScene" class="io-btn export-btn">
+          💾 Save Scene
+        </button>
+        <p class="hint">Download current scene as JSON file</p>
+      </div>
 
-    <!-- Clear Scene -->
-    <div class="io-section">
-      <h4>Clear Scene</h4>
-      <button @click="clearScene" class="io-btn clear-btn">
-        🗑️ Clear All
-      </button>
-      <p class="hint">Remove all objects from scene</p>
-    </div>
+      <!-- Import Section -->
+      <div class="io-section">
+        <input
+            ref="fileInput"
+            type="file"
+            accept=".json"
+            @change="handleFileSelect"
+            style="display: none"
+        />
+        <button @click="triggerFileInput" class="io-btn import-btn">
+          📂 Load Scene
+        </button>
+        <p class="hint">Load scene from JSON file</p>
+      </div>
 
-    <!-- Status Message -->
-    <div v-if="statusMessage" class="status-message" :class="statusType">
-      {{ statusMessage }}
+      <!-- Clear Scene -->
+      <div class="io-section">
+        <button @click="clearScene" class="io-btn clear-btn">
+          🗑️ Clear All
+        </button>
+        <p class="hint">Remove all objects from scene</p>
+      </div>
+
+      <!-- Status Message -->
+      <div v-if="statusMessage" class="status-message" :class="statusType">
+        {{ statusMessage }}
+      </div>
     </div>
   </div>
 </template>
@@ -51,6 +52,7 @@ const sceneStore = useSceneStore()
 const fileInput = ref(null)
 const statusMessage = ref('')
 const statusType = ref('') // 'success' or 'error'
+const isExpanded = ref(false)
 
 /**
  * Export the current scene as JSON file
@@ -89,7 +91,7 @@ const exportScene = () => {
 }
 
 /**
- * Trigger file input click
+ * Trigger the hidden file input
  */
 const triggerFileInput = () => {
   fileInput.value.click()
@@ -108,30 +110,28 @@ const handleFileSelect = (event) => {
     try {
       const jsonData = JSON.parse(e.target.result)
 
-      // Validate format
+      // Validate structure
       if (!jsonData.scene) {
         throw new Error('Invalid scene file format')
       }
 
-      // Import scene
+      // Import the scene
       sceneStore.importScene(jsonData.scene)
-
       showStatus('Scene loaded successfully!', 'success')
     } catch (error) {
       console.error('Import error:', error)
       showStatus('Failed to load scene: ' + error.message, 'error')
     }
-
-    // Reset file input
-    event.target.value = ''
   }
 
   reader.onerror = () => {
     showStatus('Failed to read file', 'error')
-    event.target.value = ''
   }
 
   reader.readAsText(file)
+
+  // Reset input
+  event.target.value = ''
 }
 
 /**
@@ -145,13 +145,13 @@ const clearScene = () => {
 }
 
 /**
- * Show status message
+ * Show a status message
  */
 const showStatus = (message, type) => {
   statusMessage.value = message
   statusType.value = type
 
-  // Clear after 3 seconds
+  // Auto-dismiss after 3 seconds
   setTimeout(() => {
     statusMessage.value = ''
     statusType.value = ''
@@ -161,55 +161,58 @@ const showStatus = (message, type) => {
 
 <style scoped>
 .scene-io-panel {
-  padding: 16px;
+  padding: 12px;
   background: #2a2a2a;
   border-radius: 8px;
   margin-bottom: 16px;
 }
 
-.scene-io-panel h3 {
+.panel-header {
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+
+.panel-header:hover h3 {
+  color: #6bb3ff;
+}
+
+.panel-header h3 {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 16px;
   color: #ffffff;
+  margin: 0;
+  transition: color 0.2s;
+}
+
+.panel-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #444;
 }
 
 .io-section {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #444;
+  margin-bottom: 16px;
 }
 
 .io-section:last-of-type {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.io-section h4 {
-  font-size: 13px;
-  font-weight: 600;
-  color: #aaaaaa;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin-bottom: 8px;
 }
 
 .io-btn {
   width: 100%;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 4px;
+  padding: 10px 16px;
   font-size: 14px;
   font-weight: 600;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 6px;
+  color: #ffffff;
 }
 
 .export-btn {
   background: #4a9eff;
-  color: #ffffff;
 }
 
 .export-btn:hover {
@@ -217,57 +220,45 @@ const showStatus = (message, type) => {
 }
 
 .import-btn {
-  background: #2ecc71;
-  color: #ffffff;
+  background: #50c878;
 }
 
 .import-btn:hover {
-  background: #27ae60;
+  background: #6fd992;
 }
 
 .clear-btn {
-  background: #e74c3c;
-  color: #ffffff;
+  background: #ff6b6b;
 }
 
 .clear-btn:hover {
-  background: #c0392b;
+  background: #ff8787;
 }
 
 .hint {
-  font-size: 11px;
+  font-size: 12px;
   color: #888;
-  margin: 0;
-  font-style: italic;
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 
 .status-message {
   padding: 10px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   margin-top: 12px;
-  animation: slideIn 0.3s ease-out;
 }
 
 .status-message.success {
-  background: #27ae60;
-  color: #ffffff;
+  background: rgba(80, 200, 120, 0.2);
+  color: #50c878;
+  border: 1px solid rgba(80, 200, 120, 0.3);
 }
 
 .status-message.error {
-  background: #e74c3c;
-  color: #ffffff;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
 }
 </style>
