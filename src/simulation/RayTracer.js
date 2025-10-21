@@ -151,6 +151,7 @@ export default class RayTracer {
                 parentSegments.push({
                     start: startPoint,
                     end: endPoint,
+                    intensity: currentRay.intensity,
                     children: []
                 });
                 continue;
@@ -162,6 +163,7 @@ export default class RayTracer {
                 const segment = {
                     start: startPoint,
                     end: { ...intersection.point },
+                    intensity: currentRay.intensity,
                     children: []
                 }
                 parentSegments.push(segment);
@@ -202,6 +204,7 @@ export default class RayTracer {
                 parentSegments.push({
                     start: startPoint,
                     end: endPoint,
+                    intensity: currentRay.intensity,
                     children: []
                 });
             }

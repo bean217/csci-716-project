@@ -36,27 +36,6 @@
         </div>
       </div>
 
-      <!-- Ray Opacity -->
-      <div class="property-group">
-        <label>
-          Ray Opacity
-          <span class="property-value">{{ simulationStore.rayOpacity.toFixed(2) }}</span>
-        </label>
-        <input
-            type="range"
-            :value="simulationStore.rayOpacity"
-            @input="simulationStore.setRayOpacity(parseFloat($event.target.value))"
-            min="0"
-            max="1"
-            step="0.05"
-            class="slider"
-        />
-        <div class="range-labels">
-          <span>0.0</span>
-          <span>1.0</span>
-        </div>
-      </div>
-
       <!-- Ray Width -->
       <div class="property-group">
         <label>
@@ -97,6 +76,8 @@
           />
         </div>
       </div>
+
+      <p class="hint">Ray opacity is controlled by intensity</p>
     </template>
   </div>
 </template>

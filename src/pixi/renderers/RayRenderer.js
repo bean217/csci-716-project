@@ -65,7 +65,6 @@ export default class RayRenderer {
                 this.simulationStore.showRays,
                 this.simulationStore.maxBounces,
                 this.simulationStore.minIntensity,
-                this.simulationStore.rayOpacity,
                 this.simulationStore.rayColor,
                 this.simulationStore.rayWidth
             ],
@@ -92,31 +91,30 @@ export default class RayRenderer {
 
         // Render each path
         const color = this.hexToNumber(this.simulationStore.rayColor);
-        const alpha = this.simulationStore.rayOpacity;
         const width = this.simulationStore.rayWidth;
 
         allSegments.forEach(segment => {
-            this.drawSegmentTree(segment, color, alpha, width);
+            this.drawSegmentTree(segment, color, width);
         });
     }
 
     /**
      * Draw a ray segment tree recursively
      */
-    drawSegmentTree(segment, color, alpha, width) {
+    drawSegmentTree(segment, color, width) {
         // Draw this segment
         this.rayGraphics.moveTo(segment.start.x, segment.start.y);
         this.rayGraphics.lineTo(segment.end.x, segment.end.y);
         this.rayGraphics.stroke({
             width: width,
             color: color,
-            alphaL: alpha
+            alpha: segment.intensity || 1.0  // use segment intensity for opacity
         });
 
         // Draw all children
         if (segment.children && segment.children.length > 0) {
             segment.children.forEach(child => {
-                this.drawSegmentTree(child, color, alpha, width);
+                this.drawSegmentTree(child, color, width);
             });
         }
     }

@@ -18,7 +18,6 @@ export const useSimulationStore = defineStore('simulation', {
 
         // Rendering settings
         showRays: true,
-        rayOpacity: 0.6,
         rayColor: '#00ff00',
         rayWidth: 1,
 
@@ -47,13 +46,6 @@ export const useSimulationStore = defineStore('simulation', {
          */
         toggleRays() {
             this.showRays = !this.showRays;
-        },
-
-        /**
-         * Set ray opacity
-         */
-        setRayOpacity(value) {
-            this.rayOpacity = Math.max(0, Math.min(1, value));
         },
 
         /**
