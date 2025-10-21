@@ -487,6 +487,8 @@ export const useSceneStore = defineStore('scene', {
                     }
                 });
             }
+
+            console.log('Scene imported successfully');
         }
     }
 })

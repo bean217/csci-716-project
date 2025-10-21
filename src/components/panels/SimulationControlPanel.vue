@@ -76,8 +76,6 @@
           />
         </div>
       </div>
-
-      <p class="hint">Ray opacity is controlled by intensity</p>
     </template>
   </div>
 </template>

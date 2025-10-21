@@ -4,6 +4,7 @@
       <CanvasContainer />
       <div id="ui-panel">
         <h2>Ray Tracing Simulator</h2>
+        <SceneIOPanel />
         <SimulationControlPanel />
         <ToolPalette />
         <PropertyPanel />
@@ -24,6 +25,7 @@
           <li>Create geometric objects (rectangles, triangles, ellipses)</li>
           <li>Adjust material properties (reflectivity, refractive index)</li>
           <li>Trace light paths from target objects back to the focal point</li>
+          <li>Save and load scenes as JSON files</li>
           <li>Optimized with spatial acceleration structures (KD-trees, BVH)</li>
         </ul>
       </div>
@@ -33,6 +35,7 @@
 
 <script setup>
 import CanvasContainer from './components/canvas/CanvasContainer.vue';
+import SceneIOPanel from './components/panels/SceneIOPanel.vue';
 import SimulationControlPanel from './components/panels/SimulationControlPanel.vue';
 import ToolPalette from './components/panels/ToolPalette.vue';
 import PropertyPanel from './components/panels/PropertyPanel.vue';
