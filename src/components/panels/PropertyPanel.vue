@@ -132,6 +132,11 @@
           <FocalPointProperties :object="selectedObject" />
         </template>
 
+        <!-- Target Properties -->
+        <template v-else-if="selectedObject.type === 'Target'">
+          <TargetProperties :object="selectedObject" />
+        </template>
+
         <!-- Placeholder for other shapes -->
         <template v-else>
           <p class="placeholder-text">Shape-specific properties will appear here</p>
@@ -139,7 +144,7 @@
       </section>
 
       <!-- Material Properties Section -->
-      <section class="property-section" v-if="selectedObject.type !== 'FocalPoint'">
+      <section class="property-section" v-if="selectedObject.type !== 'FocalPoint' && selectedObject.type !== 'Target'">
         <h4>Material Properties</h4>
 
         <div class="property-group">
@@ -196,6 +201,7 @@ import CircleProperties from './shape-properties/CircleProperties.vue';
 import TriangleProperties from './shape-properties/TriangleProperties.vue';
 import EquilateralTriangleProperties from './shape-properties/EquilateralTriangleProperties.vue';
 import FocalPointProperties from './shape-properties/FocalPointProperties.vue';
+import TargetProperties from "./shape-properties/TargetProperties.vue";
 
 const sceneStore = useSceneStore();
 

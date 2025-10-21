@@ -59,6 +59,13 @@ export default class RayRenderer {
             { deep: true }
         );
 
+        // Watch for changes to targets
+        watch(
+            () => this.sceneStore.targets,
+            () => this.render(),
+            { deep: true }
+        );
+
         // Watch for simulation settings changes
         watch(
             () => [
@@ -90,31 +97,41 @@ export default class RayRenderer {
         const allSegments = this.rayTracer.traceAll();
 
         // Render each path
-        const color = this.hexToNumber(this.simulationStore.rayColor);
+        const defaultColor = this.hexToNumber(this.simulationStore.rayColor);
         const width = this.simulationStore.rayWidth;
 
         allSegments.forEach(segment => {
-            this.drawSegmentTree(segment, color, width);
+            this.drawSegmentTree(segment, defaultColor, width);
         });
     }
 
     /**
      * Draw a ray segment tree recursively
      */
-    drawSegmentTree(segment, color, width) {
+    drawSegmentTree(segment, defaultColor, width) {
+        // Determine color and alpha base don where this hits a target
+        let color = defaultColor;
+        let alpha = segment.intensity || 1.0;
+
+        if (segment.hitsTarget) {
+            // Override with red color and full intensity for target paths
+            color = 0xff0000;   // Red
+            alpha = 1.0;        // Full opacity
+        }
+
         // Draw this segment
         this.rayGraphics.moveTo(segment.start.x, segment.start.y);
         this.rayGraphics.lineTo(segment.end.x, segment.end.y);
         this.rayGraphics.stroke({
             width: width,
             color: color,
-            alpha: segment.intensity || 1.0  // use segment intensity for opacity
+            alpha: alpha  // use segment intensity for opacity
         });
 
         // Draw all children
         if (segment.children && segment.children.length > 0) {
             segment.children.forEach(child => {
-                this.drawSegmentTree(child, color, width);
+                this.drawSegmentTree(child, defaultColor, width);
             });
         }
     }
