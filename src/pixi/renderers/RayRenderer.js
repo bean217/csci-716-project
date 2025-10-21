@@ -27,7 +27,8 @@ export default class RayRenderer {
             maxBounces: simulationStore.maxBounces,
             minIntensity: simulationStore.minIntensity,
             canvasWidth: app.screen.width,
-            canvasHeight: app.screen.height
+            canvasHeight: app.screen.height,
+            simulationStore: simulationStore.useBVH
         });
 
         // Graphics for rays
@@ -48,7 +49,11 @@ export default class RayRenderer {
         // Watch for changes to objects
         watch(
             () => this.sceneStore.objects,
-            () => this.render(),
+            () => {
+                // Invalidate BVH when objects change
+                this.rayTracer.invalidateBVH();
+                this.render();
+            },
             { deep: true }
         );
 

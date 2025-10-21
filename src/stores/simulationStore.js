@@ -15,6 +15,7 @@ export const useSimulationStore = defineStore('simulation', {
         // Simulation settings
         maxBounces: 5,
         minIntensity: 0.01,
+        useBVH: true,
 
         // Rendering settings
         showRays: true,
@@ -39,6 +40,13 @@ export const useSimulationStore = defineStore('simulation', {
          */
         setMinIntensity(value) {
             this.minIntensity = Math.max(0, Math.min(1, value));
+        },
+
+        /**
+         * Toggle use Bounding Volume Hierarchy
+         */
+        toggleBVH() {
+            this.useBVH = !this.useBVH;
         },
 
         /**

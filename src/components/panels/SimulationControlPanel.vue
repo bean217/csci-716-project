@@ -14,6 +14,18 @@
       </label>
     </div>
 
+    <!-- Toggle BVH -->
+    <div class="property-group">
+      <label class="checkbox-label">
+        <input
+            type="checkbox"
+            :checked="simulationStore.useBVH"
+            @change="simulationStore.toggleBVH()"
+        />
+        <span>Use BVH</span>
+      </label>
+    </div>
+
     <template v-if="simulationStore.showRays">
       <!-- Max Bounces -->
       <div class="property-group">
