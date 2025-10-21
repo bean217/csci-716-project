@@ -14,6 +14,7 @@ import Triangle from '@/geometry/Triangle.js';
 import EquilateralTriangle from '@/geometry/EquilateralTriangle.js';
 import FocalPoint from '@/geometry/FocalPoint.js';
 import Target from '@/geometry/Target.js';
+import CollisionDetection from "@/simulation/CollisionDetection.js";
 
 /**
  * Scene store manages all geometric objects in the scene
@@ -352,6 +353,99 @@ export const useSceneStore = defineStore('scene', {
             if (this.selectedObjectId) {
                 this.updateObject(this.selectedObjectId, updates);
             }
+        },
+
+        /**
+         * Check if an object collides with any existing objects
+         * @param {Object} object - The object to check
+         * @returns {boolean} Ture if collision detected
+         */
+        checkCollision(object) {
+            // Check against regular objects
+            for (const other of this.objects) {
+                if (other.id !== object.id && CollisionDetection.objectsCollide(object, other)) {
+                    return true;
+                }
+            }
+
+            // Check against focal points
+            for (const focalPoint of this.focalPoints) {
+                if (focalPoint.id !== object.id && CollisionDetection.objectsCollide(object, focalPoint)) {
+                    return true;
+                }
+            }
+
+            // Check against targets
+            for (const target of this.targets) {
+                if (target.id !== object.id && CollisionDetection.objectsCollide(object, target)) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        /**
+         * Check if an object at a position would collide
+         * @param {Object} object - The object to check
+         * @param {number} x - X position
+         * @param {number} y - Y position
+         */
+        wouldCollideAt(object, x, y) {
+            // Save original position
+            const originalX = object.position.x;
+            const originalY = object.position.y;
+
+            // Temporarily move object
+            object.setPosition(x, y);
+
+            // Check for collisions
+            const hasCollision = this.checkCollision(object);
+
+            // Restore original position
+            object.setPosition(originalX, originalY);
+
+            return hasCollision;
+        },
+
+        /**
+         * Add object with collision checking
+         * Modified version of addObject that prevents overlapping
+         */
+        addObjectWithCollisionCheck(object, select = true) {
+            if (!object || !object.id) {
+                console.error('Invalid object provided to addObject');
+                return false;
+            }
+
+            // Check for collision before adding
+            if (this.checkCollision(object)) {
+                console.warn(`Cannot add ${object.type}: collision detected`);
+            }
+        },
+
+        /**
+         * Update object position with collision checking
+         * @param {string} id - Object ID
+         * @param {number} x - New X position
+         * @param {number} y - New Y position
+         * @returns {boolean} True if update succeeded, false if collision
+         */
+        updatePositionWithCollisionCheck(id, x, y) {
+            const object = this.getObjectById(id);
+            if (!object) {
+                return false;
+            }
+
+            // Check if new position would cause collision
+            if (this.wouldCollideAt(object, x, y)) {
+                console.warn(`Cannot move ${object.type}: collision detected`);
+                return false;
+            }
+
+            // Update position
+            this.updateObject(id, { x, y });
+            return true;
         },
 
         /**

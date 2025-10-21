@@ -19,6 +19,7 @@ export default class InteractionManager {
         this.draggedObjectId = null;
         this.dragOffset = { x: 0, y: 0 };
         this.hoveredObjectId = null;
+        this.lastValidPosition = null;
 
         // Bind event handlers
         this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -76,6 +77,12 @@ export default class InteractionManager {
                 y: mousePos.y - clickedObject.position.y
             }
 
+            // Store last valid position
+            this.lastValidPosition = {
+                x: clickedObject.position.x,
+                y: clickedObject.position.y
+            };
+
             this.canvas.style.cursor = 'grabbing';
         } else {
             // Clicked on empty space - deselect
@@ -94,20 +101,35 @@ export default class InteractionManager {
             const newX = mousePos.x - this.dragOffset.x;
             const newY = mousePos.y - this.dragOffset.y;
 
-            this.sceneStore.updateObject(this.draggedObjectId, {
-                x: newX, y: newY
-            });
+            // Try to update position with collision checking
+            const success = this.sceneStore.updatePositionWithCollisionCheck(
+                this.draggedObjectId,
+                newX,
+                newY,
+            );
+
+            if (success) {
+                // Update was successful, store as last valid position
+                this.lastValidPosition = { x: newX, y: newY };
+            } else {
+                // Collision detected, optionally provide visual feedback
+                this.canvas.style.cursor = 'not-allowed';
+            }
+
+            // this.sceneStore.updateObject(this.draggedObjectId, {
+            //     x: newX, y: newY
+            // });
         } else {
             // Update hover state
             const hoveredObject = this.sceneStore.findObjectAtPoint(mousePos.x, mousePos.y);
-            const newHoveredId = hoveredObject ? hoveredObject.id : null;
 
-            if (newHoveredId !== this.hoveredObjectId) {
-                this.hoveredObjectId = newHoveredId;
+            if (hoveredObject) {
+                this.hoveredObjectId = hoveredObject.id;
+                this.canvas.style.cursor = 'grab';
+            } else {
+                this.hoveredObjectId = null;
+                this.canvas.style.cursor = 'default';
             }
-
-            // Update cursor
-            this.canvas.style.cursor = hoveredObject ? 'grab' : 'default';
         }
     }
 
@@ -118,6 +140,7 @@ export default class InteractionManager {
         if (this.isDragging) {
             this.isDragging = false;
             this.draggedObjectId = null;
+            this.lastValidPosition = null;
             this.dragOffset = { x: 0, y: 0 };
 
             // Update cursor based on hover state
