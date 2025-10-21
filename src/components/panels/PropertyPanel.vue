@@ -51,7 +51,7 @@
       </section>
 
       <!-- Colors Section -->
-      <section class="property-section">
+      <section v-if="selectedObject.type !== 'FocalPoint' && selectedObject.type !== 'Target'" class="property-section">
         <h4>Colors</h4>
 
         <div class="property-group color-group">
