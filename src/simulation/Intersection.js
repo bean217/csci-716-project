@@ -14,7 +14,7 @@ export default class Intersection {
         this.distance = distance;       // Distance from ray origin to hit point
         this.point = point;             // {x, y} - Hit point coordinates
         this.normal = normal;           // {x, y} - Surface normal at hit point
-        this.object = object;           // The objec that was hit
+        this.object = object;           // The object that was hit
     }
 
     /**

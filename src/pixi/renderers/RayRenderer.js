@@ -67,7 +67,10 @@ export default class RayRenderer {
         // Watch for changes to targets
         watch(
             () => this.sceneStore.targets,
-            () => this.render(),
+            () => {
+                this.rayTracer.invalidateBVH();
+                this.render();
+            },
             { deep: true }
         );
 
