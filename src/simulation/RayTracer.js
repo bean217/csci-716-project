@@ -384,9 +384,8 @@ export default class RayTracer {
      * @returns {Object} Intersection result with type flag
      */
     findClosestIntersection(ray, currentMedium) {
-        let closestIntersection = null;
-        let closestDistance = Infinity;
-        let isTarget = false;
+        let closestIntersection;
+        let isTarget;
 
         // If we're inside an object, always check for exit intersection first
         const exitIntersection = currentMedium
