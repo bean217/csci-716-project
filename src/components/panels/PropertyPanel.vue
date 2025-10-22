@@ -149,6 +149,26 @@
 
         <div class="property-group">
           <label>
+            Absorptance
+            <span class="property-value">{{ selectedObject.material.absorptance.toFixed(2) }}</span>
+          </label>
+          <input
+              type="range"
+              :value="selectedObject.material.absorptance"
+              @input="updateProperty('absorptance', parseFloat($event.target.value))"
+              min="0"
+              max="1"
+              step="0.01"
+              class="slider"
+          />
+          <div class="range-labels">
+            <span>0.0</span>
+            <span>1.0</span>
+          </div>
+        </div>
+
+        <div class="property-group">
+          <label>
             Reflectivity
             <span class="property-value">{{ selectedObject.material.reflectivity.toFixed(2) }}</span>
           </label>

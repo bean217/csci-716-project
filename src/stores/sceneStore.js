@@ -275,6 +275,9 @@ export const useSceneStore = defineStore('scene', {
             if (updates.refractiveIndex !== undefined) {
                 object.material.setRefractiveIndex(updates.refractiveIndex);
             }
+            if (updates.absorptance !== undefined) {
+                object.material.setAbsorptance(updates.absorptance);
+            }
 
             // Update shape-specific properties
             if (object.type === 'Rectangle' || object.type === 'Square') {

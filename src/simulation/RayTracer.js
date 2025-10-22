@@ -458,6 +458,17 @@ export default class RayTracer {
     calculateNextRays(ray, intersection, currentMedium) {
         const material = intersection.object.material;
         const reflectivity = material.reflectivity;
+        const absorptance = material.absorptance;
+
+        if (absorptance > 0.999) {
+            // If the material absorbs all the light, then don't calculate any reflections
+            return {
+                reflected: null,
+                refracted: null,
+                reflectedMedium: null,
+                refractedMedium: null
+            };
+        }
 
         // Determine refractive indices
         const n1 = currentMedium ? currentMedium.material.refractiveIndex : this.settings.airRefractiveIndex;
@@ -474,8 +485,8 @@ export default class RayTracer {
 
         if (refractedDir) {
             // Both reflection and refraction possible
-            const reflectedRay = ray.spawn(intersection.point, reflectedDir, reflectivity);
-            const refractedRay = ray.spawn(intersection.point, refractedDir, 1 - reflectivity);
+            const reflectedRay = ray.spawn(intersection.point, reflectedDir, (1 - absorptance) * reflectivity);
+            const refractedRay = ray.spawn(intersection.point, refractedDir, (1 - absorptance) * (1 - reflectivity));
 
             return {
                 reflected: reflectedRay,
@@ -485,13 +496,13 @@ export default class RayTracer {
             };
         } else {
             // Total internal reflection
-            const reflectedRay = ray.spawn(intersection.point, reflectedDir, 1.0);
+            const reflectedRay = ray.spawn(intersection.point, reflectedDir, 1 - absorptance);
             return {
                 reflected: reflectedRay,
                 refracted: null,
                 reflectedMedium: currentMedium,
                 refractedMedium: null
-            }
+            };
         }
     }
 }
