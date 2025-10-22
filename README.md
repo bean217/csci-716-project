@@ -5,24 +5,51 @@ An interactive 2D ray-tracing visualization tool built with Vue.js and PixiJS.
 ## Project Structure
 
 ```
-raytracing-simulator/
+csci-716-project/
 ├── src/
-│   ├── main.js                      # Vue app entry
-│   ├── App.vue                      # Root component
+│   ├── main.js                             # Vue app entry
+│   ├── App.vue                             # Root component
 │   ├── components/
 │   │   └── canvas/
-│   │       └── CanvasContainer.vue  # PixiJS canvas wrapper
+│   │       └── CanvasContainer.vue         # PixiJS canvas wrapper
+│   │   └── panels/
+│   │       ├── PropertyPanel.vue           # Object properties
+│   │       ├── SceneIOPanel.vue            # Scene management (import/export scenes)
+│   │       ├── SimulationControlPanel.vue  # Set simulation properties
+│   │       ├── ToolPalette.vue             # Add focal/target/shape UI
+│   │       └── shape-properties/           # Shape-specific properties
+│   │           └── ...
+│   ├── geometry/                           # Geometric shape model definitions
+│   │   └── ...
+│   ├── models/                             
+│   │   └── Material.js                     # Generic object material definition
 │   ├── pixi/
-│   │   └── core/
-│   │       └── PixiApp.js           # PixiJS application
+│   │   ├── core/
+│   │   │   ├── PixiApp.js                  # PixiJS application
+│   │   ├── interactions/
+│   │   │   ├── InteractionManager.js       # Mouse and browser window actions
+│   │   └── renderers/
+│   │       ├── GeometryRenderer.js         # Render shapes
+│   │       └── RayRenderer.js              # Render rays
+│   ├── simulation/
+│   │   ├── BVH.js                          # Bounding Volume Hierarchy
+│   │   ├── BVHNode.js                      
+│   │   ├── LightCalculator.js              # Calculate light interactions
+│   │   ├── Intersection.js                 # Calculate ray-shape intersections
+│   │   ├── Ray.js                          
+│   │   └── RayTracer.js                    # Define ray tracing behavior from focals
+│   ├── utils/
+│   │   ├── math/
+│   │   │   └── GeometryMath.js             # Geometry calculation utils
+│   │   └── IdGenerator.js                  # Unique object ID generator utility
 │   └── styles/
-│       └── main.css                 # Global styles
+│       └── main.css                        # Global styles (sparsely used)
 ├── index.html
 ├── package.json
 ├── vite.config.js
-├── Dockerfile                       # Production build
-├── Dockerfile.dev                   # Development build
-└── nginx.conf                       # Nginx configuration
+├── Dockerfile                              # Production build
+├── Dockerfile.dev                          # Development build
+└── nginx.conf                              # Nginx configuration
 ```
 
 ## Getting Started
@@ -94,11 +121,3 @@ docker run -p 8080:80 raytracing-prod
 - **PixiJS** - WebGL rendering
 - **Vite** - Build tool
 - **Docker** - Containerization
-
-## Next Steps
-
-- Add simulation stores (Pinia)
-- Implement geometric objects
-- Build ray-tracing engine
-- Add spatial acceleration structures
-- Create UI controls and panels
