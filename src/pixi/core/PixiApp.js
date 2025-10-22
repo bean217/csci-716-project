@@ -57,20 +57,6 @@ export default class PixiApp {
             this.interactionManager = new InteractionManager(this.app, this.sceneStore);
         }
 
-        // // Initialize geometry renderer if store is provided
-        // if (this.sceneStore) {
-        //     // Geometry renderer (top layer)
-        //     this.geometryRenderer = new GeometryRenderer(this.app, this.sceneStore);
-        //
-        //     // Ray renderer first (bottom layer)
-        //     if (this.simulationStore) {
-        //         this.rayRenderer = new RayRenderer(this.app, this.sceneStore, this.simulationStore);
-        //     }
-        //
-        //     // Interaction manager
-        //     this.interactionManager = new InteractionManager(this.app, this.sceneStore);
-        // }
-
         // Setup resize handling
         this.setupResizeHandling();
     }
@@ -110,15 +96,6 @@ export default class PixiApp {
         }, 100);    // 100ms debounce
     }
 
-    // handleResize() {
-    //     if (this.container && this.app) {
-    //         this.app.renderer.resize(
-    //             this.container.clientWidth,
-    //             this.container.clientHeight
-    //         );
-    //     }
-    // }
-
     /**
      * Handle resize of the canvas
      * @param {number} width - New width
@@ -148,26 +125,6 @@ export default class PixiApp {
             this.geometryRenderer.renderAll();
         }
     }
-
-    // destroy() {
-    //     window.removeEventListener('resize', this.handleResize);
-    //
-    //     if (this.interactionManager) {
-    //         this.interactionManager.destroy();
-    //     }
-    //
-    //     if (this.rayRenderer) {
-    //         this.rayRenderer.destroy();
-    //     }
-    //
-    //     if (this.geometryRenderer) {
-    //         this.geometryRenderer.destroy();
-    //     }
-    //
-    //     if (this.app) {
-    //         this.app.destroy(true, { children: true, texture: true });
-    //     }
-    // }
 
     /**
      * Destroy the application and clean up
