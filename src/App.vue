@@ -34,11 +34,11 @@
 </template>
 
 <script setup>
-import CanvasContainer from './components/canvas/CanvasContainer.vue';
-import SceneIOPanel from './components/panels/SceneIOPanel.vue';
-import SimulationControlPanel from './components/panels/SimulationControlPanel.vue';
-import ToolPalette from './components/panels/ToolPalette.vue';
-import PropertyPanel from './components/panels/PropertyPanel.vue';
+import CanvasContainer from './components/canvas/CanvasContainer.vue'
+import SceneIOPanel from './components/panels/SceneIOPanel.vue'
+import SimulationControlPanel from './components/panels/SimulationControlPanel.vue'
+import ToolPalette from './components/panels/ToolPalette.vue'
+import PropertyPanel from './components/panels/PropertyPanel.vue'
 </script>
 
 <style scoped>
@@ -52,20 +52,34 @@ import PropertyPanel from './components/panels/PropertyPanel.vue';
 #app-container {
   display: flex;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 90vh;
+  height: 70vh;
+  min-height: 500px;
+  max-height: 900px;
   background: #1a1a1a;
+  position: relative;
+}
+
+#app-container > :first-child {
+  flex: 1;
+  min-width: 0;
+  position: relative;
 }
 
 #ui-panel {
   width: 320px;
+  min-width: 320px;
+  max-width: 400px;
   background: #2a2a2a;
   color: #ffffff;
   padding: 20px;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1000;
+  max-height: 100%;
 }
 
 #ui-panel h2 {
@@ -74,12 +88,33 @@ import PropertyPanel from './components/panels/PropertyPanel.vue';
   font-weight: 600;
   padding-bottom: 16px;
   border-bottom: 1px solid #444;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Ensure all panels can be scrolled to */
+#ui-panel > * {
+  flex-shrink: 0;
+}
+
+/* Override PropertyPanel's max-height to allow proper scrolling */
+#ui-panel :deep(.property-panel) {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* Prevent other panels from shrinking */
+#ui-panel :deep(.scene-io-panel),
+#ui-panel :deep(.simulation-control-panel),
+#ui-panel :deep(.tool-palette) {
+  flex-shrink: 0;
 }
 
 #project-info {
   flex: 1;
   background: #f5f5f5;
   padding: 60px 20px;
+  min-height: 300px;
 }
 
 .info-content {
@@ -127,5 +162,34 @@ import PropertyPanel from './components/panels/PropertyPanel.vue';
   left: 0;
   color: #4a9eff;
   font-weight: bold;
+}
+
+@media (max-width: 1024px) {
+  #app-container {
+    height: 60vh;
+  }
+
+  #ui-panel {
+    width: 280px;
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  #app-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 400px;
+  }
+
+  #app-container > :first-child {
+    height: 400px;
+  }
+
+  #ui-panel {
+    width: 100%;
+    max-width: none;
+    max-height: 50vh;
+  }
 }
 </style>
