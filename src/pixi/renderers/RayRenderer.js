@@ -126,14 +126,13 @@ export default class RayRenderer {
             color = 0xff0000;   // Red
             alpha = 1.0;        // Full opacity
         }
-
         // Draw this segment
         this.rayGraphics.moveTo(segment.start.x, segment.start.y);
         this.rayGraphics.lineTo(segment.end.x, segment.end.y);
         this.rayGraphics.stroke({
             width: width,
             color: color,
-            alpha: alpha  // use segment intensity for opacity
+            alpha: Math.sqrt(alpha)  // use segment intensity for opacity
         });
 
         // Draw all children
