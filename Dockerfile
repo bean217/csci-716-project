@@ -5,14 +5,18 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source and build
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production stage 
+# Use unprivileged nginx image to make it compatible with CSH OKD
+FROM nginxinc/nginx-unprivileged:stable-alpine
+
+# Remove the user directive from the nginx configuration
+RUN sed -i '/^user/d' /etc/nginx/nginx.conf
 
 # Copy build files
 COPY --from=build /app/dist /usr/share/nginx/html
