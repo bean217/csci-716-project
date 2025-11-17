@@ -107,34 +107,61 @@ const isExpanded = ref(false)
 
 <style scoped>
 .simulation-control-panel {
-  padding: 12px;
-  background: #2a2a2a;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  padding: 0.875rem;
+  background: rgba(30, 30, 50, 0.4);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.simulation-control-panel:hover {
+  background: rgba(30, 30, 50, 0.5);
+  border-color: rgba(102, 126, 234, 0.3);
 }
 
 .panel-header {
   cursor: pointer;
   user-select: none;
-  padding: 4px 0;
+  padding: 0.25rem 0;
+  transition: all 0.3s ease;
 }
 
 .panel-header:hover h3 {
-  color: #6bb3ff;
+  background: linear-gradient(135deg, #7e92f5 0%, #8e5cb8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .panel-header h3 {
-  font-size: 16px;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: #ffffff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .panel-content {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #444;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .property-group {
@@ -176,40 +203,45 @@ const isExpanded = ref(false)
 .slider {
   width: 100%;
   height: 6px;
-  background: #555;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   outline: none;
   -webkit-appearance: none;
   cursor: pointer;
+  position: relative;
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #4a9eff;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .slider::-webkit-slider-thumb:hover {
-  background: #6bb3ff;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
 .slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #4a9eff;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .slider::-moz-range-thumb:hover {
-  background: #6bb3ff;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
 .range-labels {

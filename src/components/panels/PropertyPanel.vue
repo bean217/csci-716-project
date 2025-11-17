@@ -298,22 +298,28 @@ const deleteObject = () => {
 }
 
 .delete-btn {
-  background: #d32f2f;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
   border: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
 }
 
 .delete-btn:hover {
-  background: #b71c1c;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+}
+
+.delete-btn:active {
+  transform: translateY(0) scale(1);
 }
 
 .property-section {
@@ -396,39 +402,44 @@ const deleteObject = () => {
 .slider {
   width: 100%;
   height: 6px;
-  background: #444;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   outline: none;
   -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #4a9eff;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .slider::-webkit-slider-thumb:hover {
-  background: #6bb3ff;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
 .slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #4a9eff;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .slider::-moz-range-thumb:hover {
-  background: #6bb3ff;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
 .range-labels {

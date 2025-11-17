@@ -152,86 +152,118 @@ const handleShapeSelection = () => {
 
 <style scoped>
 .tool-palette {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #444;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tool-palette h3 {
-  font-size: 16px;
+  font-size: 0.875rem;
   font-weight: 600;
-  margin-bottom: 12px;
-  color: #ffffff;
+  margin-bottom: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .tool-palette h3:not(:first-child) {
-  margin-top: 20px;
+  margin-top: 1.25rem;
 }
 
-.focal-point-btn ,
+.focal-point-btn,
 .target-btn {
   width: 100%;
-  padding: 10px 12px;
-  background: #4a9eff;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #ffffff;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
-  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.focal-point-btn::before,
+.target-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.focal-point-btn:hover::before,
+.target-btn:hover::before {
+  left: 100%;
 }
 
 .focal-point-btn:hover {
-  background: #6bb3ff;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.focal-point-btn:active {
+  transform: translateY(0);
 }
 
 .target-btn {
-  background: #ff4a4a;
-  color: #ffffff;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
 }
 
 .target-btn:hover {
-  background: #ff6b6b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+}
+
+.target-btn:active {
+  transform: translateY(0);
 }
 
 .shape-dropdown {
   width: 100%;
-  padding: 8px 12px;
-  background: #333;
+  padding: 0.625rem 0.875rem;
+  background: rgba(30, 30, 50, 0.6);
   color: #ffffff;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-size: 14px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+  font-size: 0.875rem;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .shape-dropdown:hover {
-  border-color: #4a9eff;
+  border-color: rgba(102, 126, 234, 0.6);
+  background: rgba(30, 30, 50, 0.8);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
 .shape-dropdown:focus {
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 .shape-dropdown option {
-  background: #333;
+  background: #1a1a2e;
   color: #ffffff;
-  padding: 8px;
+  padding: 0.5rem;
 }
 
 .shape-dropdown optgroup {
-  background: #2a2a2a;
+  background: rgba(20, 20, 35, 0.95);
   color: #aaaaaa;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
