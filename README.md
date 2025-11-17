@@ -111,7 +111,7 @@ docker run -p 5173:5173 -v $(pwd)/src:/app/src -v $(pwd)/index.html:/app/index.h
 **Production:**
 ```bash
 docker build -t raytracing-prod .
-docker run -p 8080:80 raytracing-prod
+docker run -p 8080:8080 raytracing-prod
 ```
 
 ## Tech Stack
