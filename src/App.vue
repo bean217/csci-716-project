@@ -29,6 +29,253 @@
     <!-- Info Sections -->
     <div id="project-info">
       <div class="info-content">
+        <!-- Project Logistics Section -->
+        <div class="info-section">
+          <div class="section-header" @click="toggleLogistics">
+            <h2>
+              <span class="expand-icon">{{ isLogisticsExpanded ? '▼' : '▶' }}</span>
+              CSCI 716 Logistics
+            </h2>
+          </div>
+          <div v-show="isLogisticsExpanded" class="section-content">
+            <h3>Authors</h3>
+            <p>Bejamin Piro, Matt Pasetto, and Logan Endes</p>
+            <h3>Problem Description</h3>
+            <p>Our application portrays how light rays bounce in a closed system: showing bounces, reflections, and refractions of ray tracing with custom obstacles step-by-step.</p>
+            <h3>Background Information</h3>
+            <p>Our ray tracing simulator implements a 2D light system that models physics principles such as reflection, refraction, and total internal reflection. The core algorithm traces rays from light sources, or focal points, through a scene containing geometric obstacles with customizable material properties. All obstacles are able to have different values for absorptance, reflectivity, and the refractive index, where the absorptance is how much light the shape absorbs, reflectivity is how much light can bounce off of the object (think of matte vs. mirror), and the refractive index is how much light bends when going through an obstacle.</p>
+            <p>We made a few key assumptions when designing this simulator:</p>
+            <ul>
+              <li>Rays travel in straight lines until intersecting with objects.</li>
+              <li>Materials have uniform properties (reflectivity, refractive index, absorptance) across their surfaces.</li>
+              <li>Light intensity decreases based on material absorptance at each interaction.</li>
+              <li>The simulation operates in a 2D plane with air as the default medium, ignoring out-of-plane effects.</li>
+            </ul>
+            <h3>Pseudo-Code</h3>
+            <!-- <div class="pseudo-code-section"> -->
+              <pre>FUNCTION traceAll():
+  // Build/rebuild BVH spatial acceleration structure if needed
+  IF bvhDirty OR bvh is null:
+      rebuildBVH()
+
+  allSegments = []
+
+  // For each focal point (light source) in the scene
+  FOR EACH focalPoint IN sceneStore.focalPoints:
+      segments = traceFocalPoint(focalPoint)
+      allSegments.append(segments)
+
+  RETURN allSegments  // These segments are then rendered/ANIMATED
+
+FUNCTION traceFocalPoint(focalPoint):
+  allSegments = []
+  
+  IF focalPoint.emitFromSurface:
+      // Rays originate from the surface of the focal point
+      rayData = focalPoint.getRayOriginsAndDirections()
+      FOR EACH {origin, direction} IN rayData:
+          startingMedium = findContainingObject(origin)
+          ray = new Ray(origin, direction, intensity=1.0, generation=0)
+          segments = traceRay(ray, focalPoint.rayLength, startingMedium)
+          allSegments.append(segments)
+  ELSE:
+      // Rays originate from the center of the focal point
+      startingMedium = findContainingObject(focalPoint.position)
+      directions = focalPoint.getRayDirections()
+      FOR EACH direction IN directions:
+          ray = new Ray(focalPoint.position, direction, intensity=1.0, generation=0)
+          segments = traceRay(ray, focalPoint.rayLength, startingMedium)
+          allSegments.append(segments)
+  
+  RETURN allSegments
+
+FUNCTION traceRay(ray, maxDistance, currentMedium):
+  segments = []
+  rayQueue = [{ray, medium: currentMedium, distance: maxDistance, 
+              startPoint: ray.origin, segments, parent: null}]
+  
+  WHILE rayQueue is not empty:
+      {currentRay, insideObject, remainingDistance, startPoint, 
+      parentSegments, parentSegment} = rayQueue.dequeue()
+      
+      // Stop if ray intensity is too low
+      IF currentRay.intensity < minIntensity:
+          CONTINUE
+      
+      // Find closest intersection with scene objects or canvas boundary
+      intersection = findClosestIntersection(currentRay, insideObject)
+      canvasBoundaryDist = getCanvasBoundaryDistance(currentRay)
+      
+      // Determine what we hit first
+      candidates = []
+      IF intersection.hit:
+          candidates.append({type: 'object' or 'target', 
+                            distance: intersection.distance, data: intersection})
+      IF canvasBoundaryDist != null:
+          candidates.append({type: 'canvas', 
+                            distance: canvasBoundaryDist, data: canvasBoundaryDist})
+      
+      IF candidates is empty:
+          CONTINUE
+      
+      // Sort by distance and get closest hit
+      closestHit = candidates.sortByDistance()[0]
+      
+      // Create ray segment based on what we hit
+      IF closestHit.type == 'canvas':
+          // Ray exits canvas - create final segment
+          endPoint = currentRay.pointAt(closestHit.distance)
+          segment = {start: startPoint, end: endPoint, 
+                    intensity: currentRay.intensity, 
+                    hitsTarget: false, parent: parentSegment, children: []}
+          parentSegments.append(segment)  // ANIMATED: This segment is drawn
+          
+      ELSE IF closestHit.type == 'target':
+          // Ray hits a target - mark entire path and stop
+          segment = {start: startPoint, end: intersection.point,
+                    intensity: currentRay.intensity,
+                    hitsTarget: true, parent: parentSegment, children: []}
+          parentSegments.append(segment)  // ANIMATED: Highlighted in red
+          markPathToTarget(parentSegment)  // ANIMATED: All parent segments turn red
+          
+      ELSE IF closestHit.type == 'object':
+          // Ray hits a geometric object
+          segment = {start: startPoint, end: intersection.point,
+                    intensity: currentRay.intensity,
+                    hitsTarget: false, parent: parentSegment, children: []}
+          parentSegments.append(segment)  // ANIMATED: This segment is drawn
+          
+          // Check if we can continue tracing
+          IF intersection.distance >= remainingDistance:
+              CONTINUE  // Exceeded max distance
+          
+          newRemainingDistance = remainingDistance - intersection.distance
+          IF newRemainingDistance <= 0 OR currentRay.generation >= maxBounces:
+              CONTINUE  // Out of distance or bounces
+          
+          // Calculate reflection and refraction rays
+          nextRays = calculateNextRays(currentRay, intersection, insideObject)
+          
+          // Add reflected ray to queue
+          IF nextRays.reflected:
+              rayQueue.enqueue({
+                  ray: nextRays.reflected,
+                  medium: nextRays.reflectedMedium,
+                  distance: newRemainingDistance,
+                  startPoint: intersection.point,
+                  segments: segment.children,  // Child segments
+                  parent: segment
+              })
+          
+          // Add refracted ray to queue
+          IF nextRays.refracted:
+              rayQueue.enqueue({
+                  ray: nextRays.refracted,
+                  medium: nextRays.refractedMedium,
+                  distance: newRemainingDistance,
+                  startPoint: intersection.point,
+                  segments: segment.children,  // Child segments
+                  parent: segment
+              })
+  
+  RETURN segments  // All segments form a tree structure
+
+FUNCTION calculateNextRays(ray, intersection, currentMedium):
+  material = intersection.object.material
+  
+  // If material absorbs all light, no reflection/refraction
+  IF material.absorptance > 0.999:
+      RETURN {reflected: null, refracted: null, ...}
+  
+  // Determine refractive indices
+  n1 = currentMedium ? currentMedium.material.refractiveIndex : airRefractiveIndex
+  n2 = currentMedium ? airRefractiveIndex : material.refractiveIndex
+  
+  // Calculate reflection direction using law of reflection
+  reflectedDir = reflect(ray.direction, intersection.normal)
+  // Formula: R = I - 2(I·N)N
+  
+  // Calculate refraction direction using Snell's law
+  refractedDir = refract(ray.direction, intersection.normal, n1, n2)
+  // Returns null if total internal reflection occurs
+  
+  // Determine new medium
+  newMedium = currentMedium ? null : intersection.object
+  
+  IF refractedDir:
+      // Both reflection and refraction occur
+      reflectedRay = ray.spawn(intersection.point, reflectedDir, 
+                              (1 - absorptance) * reflectivity)
+      refractedRay = ray.spawn(intersection.point, refractedDir,
+                              (1 - absorptance) * (1 - reflectivity))
+      RETURN {reflected: reflectedRay, refracted: refractedRay, ...}
+  ELSE:
+      // Total internal reflection - only reflection
+      reflectedRay = ray.spawn(intersection.point, reflectedDir, 1 - absorptance)
+      RETURN {reflected: reflectedRay, refracted: null, ...}
+
+FUNCTION findClosestIntersection(ray, currentMedium):
+  // If inside an object, check for exit intersection first
+  exitIntersection = currentMedium ? 
+      rayObjectIntersection(ray, currentMedium) : noHit()
+  
+  // Find intersection with other objects (using BVH or brute force)
+  otherIntersection = useBVH ? 
+      bvh.traverse(ray, currentMedium) : 
+      findClosestIntersectionBruteForce(ray, currentMedium)
+  
+  // Return closest of exit and other intersections
+  RETURN closest(exitIntersection, otherIntersection)
+
+FUNCTION render(allSegments):
+  // ANIMATED: Draw all ray segments
+  FOR EACH segment IN allSegments:
+      drawSegmentTree(segment, defaultColor, width)
+
+FUNCTION drawSegmentTree(segment, color, width):
+  // ANIMATED: Determine visual properties
+  IF segment.hitsTarget:
+      color = RED  // Highlight target paths
+      alpha = 1.0
+  ELSE:
+      color = defaultColor
+      alpha = sqrt(segment.intensity)  // Opacity based on intensity
+  
+  // ANIMATED: Draw line segment
+  drawLine(segment.start, segment.end, color, alpha, width)
+  
+  // Recursively draw child segments (reflections/refractions)
+  FOR EACH child IN segment.children:
+      drawSegmentTree(child, color, width)
+</pre>
+                      
+                <!-- <div class="pseudo-code-highlights"> -->
+                  <h3>Animated Components</h3>
+                  <ul>
+                    <li><strong>Ray Segments:</strong> Each ray segment from origin to intersection point is drawn as a line on the canvas.</li>
+                    <li><strong>Ray Intensity:</strong> The opacity of each ray segment is proportional to the square root of its intensity, creating a visual fade as light loses energy through absorption.</li>
+                    <li><strong>Target Path Highlighting:</strong> When a ray hits a target object, the entire path from the origin to the target is highlighted in red.</li>
+                    <li><strong>Reflection and Refraction:</strong> Child segments (reflected and refracted rays) are drawn recursively, showing how light splits at material boundaries.</li>
+                    <li><strong>Real-time Updates:</strong> The entire ray tracing computation and rendering happens in real-time when:
+                      <ul>
+                        <li>Objects are added, moved, or deleted</li>
+                        <li>Material properties change</li>
+                        <li>Focal point properties change</li>
+                        <li>Simulation settings change</li>
+                      </ul>
+                    </li>
+                  </ul>
+        <h3>Interesting Implementation Decisions</h3>
+        <p>While implementing this simulator, we made some design decisions that may differ from similar tools.</p>
+        <ul>
+          <li><strong>Queue-Based Ray Tracing:</strong> Instead of just using recursive calls, rays are managed through a queue data structure. While the actual drawing of the rays still ends up using recursive calls, the queue structure allows finer control over termination conditions, and can help visualize the tracing step-by-step when debugging.</li>
+          <li><strong>Total Internal Reflection Handling:</strong> The refraction calculation returns null when k < 0 in the refraction formula. In this case, only the reflected ray is spawned with full remaining intensity (minus absorption), correctly modeling the physical phenomenon where all light reflects when the critical angle is exceeded.</li>
+          <li><strong>Segment Tree Structure:</strong> We stored ray paths as a tree of segments with parent-child relationships. Which allows for efficient path highlighting when a target is hit: the entire path from focal point to target can be marked by traversing up the parent chain, and it matches the branching nature of reflection and refraction.</li>
+          <li><strong>Medium Tracking:</strong> We needed explicit medium state tracking; each ray carries a reference to the object it's currently inside, or null if it's in air. When a ray hits a surface, we have to check both for intersections with other objects and for exit intersections from the current medium, then compare distances to determine which happens first.</li>
+        </ul>
+      </div>
+    </div>
+
         <!-- About Section -->
         <div class="info-section">
           <div class="section-header" @click="toggleAbout">
@@ -208,11 +455,16 @@ import ToolPalette from './components/panels/ToolPalette.vue'
 import PropertyPanel from './components/panels/PropertyPanel.vue'
 
 const isAboutExpanded = ref(false)
+const isLogisticsExpanded = ref(false)
 const isFunctionsExpanded = ref(false)
 const isPhysicsExpanded = ref(false)
 
 const toggleAbout = () => {
   isAboutExpanded.value = !isAboutExpanded.value
+}
+
+const toggleLogistics = () => {
+  isLogisticsExpanded.value = !isLogisticsExpanded.value
 }
 
 const toggleFunctions = () => {
